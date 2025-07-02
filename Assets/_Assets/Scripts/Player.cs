@@ -38,6 +38,13 @@ public class Player : MonoBehaviour, IKitchenObjectParent {
 
     private void Start() {
         gameInput.OnInteractAction += GameInputOnInteractAction;
+        gameInput.OnInteractAlternateAction += GameInputOnInteractAlternateAction;
+    }
+
+    private void GameInputOnInteractAlternateAction(object sender, EventArgs e) {
+        if (_selectedCounter != null) {
+            _selectedCounter.InteractAlternate(this);
+        }
     }
 
     private void GameInputOnInteractAction(object sender, EventArgs e) {
@@ -83,13 +90,13 @@ public class Player : MonoBehaviour, IKitchenObjectParent {
 
         if (!canMove) {
             Vector3 moveDirX = new Vector3(moveDir.x, 0, 0).normalized;
-            canMove = PlayerCanMove(moveDirX);
+            canMove = moveDir.x != 0 && PlayerCanMove(moveDirX);
 
             if (canMove) {
                 moveDir = moveDirX;
             } else {
                 Vector3 moveDirZ = new Vector3(0, 0, moveDir.z).normalized;
-                canMove = PlayerCanMove(moveDirZ);
+                canMove = moveDir.z != 0 && PlayerCanMove(moveDirZ);
 
                 if (canMove) {
                     moveDir = moveDirZ;
@@ -100,6 +107,7 @@ public class Player : MonoBehaviour, IKitchenObjectParent {
         if (canMove) {
             transform.position += moveDir * (moveSpeed * Time.deltaTime);
         }
+        
         transform.forward = Vector3.Slerp(transform.forward, moveDir, rotateSpeed * Time.deltaTime);
         
         _isWalking = moveDir != Vector3.zero;
