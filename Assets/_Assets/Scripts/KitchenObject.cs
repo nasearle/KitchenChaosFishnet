@@ -43,6 +43,8 @@ public class KitchenObject : MonoBehaviour {
         IKitchenObjectParent kitchenObjectParent) {
         Transform kitchenObjectTransform = Instantiate(kitchenObjectSo.prefab);
         KitchenObject kitchenObject = kitchenObjectTransform.GetComponent<KitchenObject>();
+        // ReSharper disable once Unity.PerformanceCriticalCodeInvocation
+        // Marked as expensive because of a LogError that should never happen so commenting out.
         kitchenObject.SetKitchenObjectParent(kitchenObjectParent);
         return kitchenObject;
     }
