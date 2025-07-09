@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 
 public class CuttingCounter : BaseCounter, IHasProgess {
+    public static event EventHandler OnAnyCut;
     public event EventHandler<IHasProgess.OnProgressChangedEventArgs> OnProgressChanged;
     public event EventHandler OnCut;
     
@@ -48,6 +49,7 @@ public class CuttingCounter : BaseCounter, IHasProgess {
             KitchenObjectSO inputKitchenObjectSO = kitchenObject.GetKitchenObjectSO();
             
             OnCut?.Invoke(this, EventArgs.Empty);
+            OnAnyCut?.Invoke(this, EventArgs.Empty);
             
             CuttingRecipeSO cuttingRecipeSO = GetCuttingRecipeSOWithInput(inputKitchenObjectSO);
             

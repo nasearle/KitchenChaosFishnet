@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class PlateKitchenObject : KitchenObject {
+    public static event EventHandler OnAnyObjectPlated;
     public event EventHandler<OnIngredientAddedEventArgs> OnIngredientAdded;
     public class OnIngredientAddedEventArgs : EventArgs {
         public KitchenObjectSO KitchenObjectSO;
@@ -29,6 +30,8 @@ public class PlateKitchenObject : KitchenObject {
         OnIngredientAdded?.Invoke(this, new OnIngredientAddedEventArgs {
             KitchenObjectSO = kitchenObjectSO
         });
+        
+        OnAnyObjectPlated?.Invoke(this, EventArgs.Empty);
         
         return true;
     }
