@@ -8,7 +8,7 @@ public static class Loader {
         LoadingScene,
     }
     
-    public static Scene targetScene;
+    private static Scene targetScene;
 
     public static void Load(Scene targetScene) {
         Loader.targetScene = targetScene;

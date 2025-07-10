@@ -4,6 +4,11 @@ using UnityEngine;
 
 public class PlateKitchenObject : KitchenObject {
     public static event EventHandler OnAnyObjectPlated;
+    
+    public static void ResetStaticData() {
+        OnAnyObjectPlated = null;
+    }
+    
     public event EventHandler<OnIngredientAddedEventArgs> OnIngredientAdded;
     public class OnIngredientAddedEventArgs : EventArgs {
         public KitchenObjectSO KitchenObjectSO;
