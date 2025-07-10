@@ -16,7 +16,8 @@ public class GameManager : MonoBehaviour {
     private State _state;
     private float _waitingToStartTimer = 1f;
     private float _countdownToStartTimer = 3f;
-    private float _gamePlayingTimer = 10f;
+    private float _gamePlayingTimer;
+    private float _gamePlayingTimerMax = 20f;
 
     private void Awake() {
         Instance = this;
@@ -35,6 +36,7 @@ public class GameManager : MonoBehaviour {
             case State.CountdownToStart:
                 _countdownToStartTimer -= Time.deltaTime;
                 if (_countdownToStartTimer < 0f) {
+                    _gamePlayingTimer = _gamePlayingTimerMax;
                     _state = State.GamePlaying;
                     OnStateChanged?.Invoke(this, EventArgs.Empty);
                 }
@@ -62,5 +64,13 @@ public class GameManager : MonoBehaviour {
 
     public float GetCountdownToStartTimer() {
         return _countdownToStartTimer;
+    }
+    
+    public bool IsGameOver() {
+        return _state == State.GameOver;
+    }
+
+    public float GetGamePlayingTimerNormalized() {
+        return 1 - (_gamePlayingTimer / _gamePlayingTimerMax);
     }
 }
