@@ -17,7 +17,10 @@ public class GameInput : MonoBehaviour {
         Move_Right,
         Interact,
         InteractAlternate,
-        Pause
+        Pause,
+        Gamepad_Interact,
+        Gamepad_InteractAlternate,
+        Gamepad_Pause,
     }
     
     private PlayerInputActions _playerInputActions;
@@ -66,6 +69,7 @@ public class GameInput : MonoBehaviour {
 
     public string GetBindingText(Binding binding) {
         switch (binding) {
+            default:
             case Binding.Move_Up:
                 // WASD composite up (index 1)
                 return _playerInputActions.Player.Move.bindings[1].ToDisplayString();
@@ -84,8 +88,12 @@ public class GameInput : MonoBehaviour {
                 return _playerInputActions.Player.InteractAlternate.bindings[0].ToDisplayString();
             case Binding.Pause:
                 return _playerInputActions.Player.Pause.bindings[0].ToDisplayString();
-            default:
-                return "";
+            case Binding.Gamepad_Interact:
+                return _playerInputActions.Player.Interact.bindings[1].ToDisplayString();
+            case Binding.Gamepad_InteractAlternate:
+                return _playerInputActions.Player.InteractAlternate.bindings[1].ToDisplayString();
+            case Binding.Gamepad_Pause:
+                return _playerInputActions.Player.Pause.bindings[1].ToDisplayString();
         }
     }
 
@@ -124,6 +132,18 @@ public class GameInput : MonoBehaviour {
             case Binding.Pause:
                 inputAction = _playerInputActions.Player.Pause;
                 bindingIndex = 0;
+                break;
+            case Binding.Gamepad_Interact:
+                inputAction = _playerInputActions.Player.Interact;
+                bindingIndex = 1;
+                break;
+            case Binding.Gamepad_InteractAlternate:
+                inputAction = _playerInputActions.Player.InteractAlternate;
+                bindingIndex = 1;
+                break;
+            case Binding.Gamepad_Pause:
+                inputAction = _playerInputActions.Player.Pause;
+                bindingIndex = 1;
                 break;
         }
 
