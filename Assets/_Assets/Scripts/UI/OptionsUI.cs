@@ -79,6 +79,7 @@ public class OptionsUI : MonoBehaviour {
     private void UpdateVisual() {
         soundEffectsText.text = "SOUND EFFECTS: " + Mathf.Round(SoundManager.Instance.GetVolume() * 10f);
         musicText.text = "MUSIC: " + Mathf.Round(MusicManager.Instance.GetVolume() * 10f);
+        
         moveUpText.text = GameInput.Instance.GetBindingText(GameInput.Binding.Move_Up);
         moveDownText.text = GameInput.Instance.GetBindingText(GameInput.Binding.Move_Down);
         moveLeftText.text = GameInput.Instance.GetBindingText(GameInput.Binding.Move_Left);

@@ -25,13 +25,13 @@ public class DeliveryManager : MonoBehaviour {
 
     private void Update() {
         _spawnRecipeTimer -= Time.deltaTime;
-        if (_spawnRecipeTimer <= 0f) {
+        if (GameManager.Instance.IsGamePlaying() && _spawnRecipeTimer <= 0f) {
             _spawnRecipeTimer = _spawnRecipeTimerMax;
 
             if (_waitingRecipeSOList.Count < _waitingRecipesMax) {
                 RecipeSO waitingRecipeSO = recipeListSO.recipeSOList[UnityEngine.Random.Range(0, recipeListSO.recipeSOList.Count)];
                 _waitingRecipeSOList.Add(waitingRecipeSO);
-                
+            
                 OnRecipeSpawned?.Invoke(this, EventArgs.Empty);
             }
         }

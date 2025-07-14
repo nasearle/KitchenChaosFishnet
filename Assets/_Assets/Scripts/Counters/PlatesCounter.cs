@@ -14,11 +14,12 @@ public class PlatesCounter : BaseCounter {
 
     private void Update() {
         _spawnPlateTimer += Time.deltaTime;
-        if (_spawnPlateTimer > _spawnPlateTimerMax) {
+        if (GameManager.Instance.IsGamePlaying() && _spawnPlateTimer > _spawnPlateTimerMax) {
             _spawnPlateTimer = 0f;
+            
             if (_platesSpawnedAmount < _platesSpawnedAmountMax) {
                 _platesSpawnedAmount++;
-                
+            
                 OnPlateSpawned?.Invoke(this, EventArgs.Empty);
             }
         }
