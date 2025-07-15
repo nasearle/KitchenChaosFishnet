@@ -23,10 +23,10 @@ public class SoundManager : MonoBehaviour {
         Player.Instance.OnObjectPickedUp += PlayerOnObjectPickedUp;
         BaseCounter.OnAnyObjectPlacedHere += BaseCounterOnAnyObjectPlacedHere;
         TrashCounter.OnAnyObjectTrashed += TrashCounterOnAnyObjectTrashed;
-        PlateKitchenObject.OnAnyObjectPlated += PlateKitchenObjectOnOnAnyObjectPlated;
+        PlateKitchenObject.OnAnyObjectPlated += PlateKitchenObjectOnAnyObjectPlated;
     }
 
-    private void PlateKitchenObjectOnOnAnyObjectPlated(object sender, EventArgs e) {
+    private void PlateKitchenObjectOnAnyObjectPlated(object sender, EventArgs e) {
         PlateKitchenObject plateKitchenObject = sender as PlateKitchenObject;
         PlaySound(audioClipRefsSO.objectPickup, plateKitchenObject.transform.position);
     }
@@ -75,6 +75,10 @@ public class SoundManager : MonoBehaviour {
     
     public void PlayCountdownSound() {
         PlaySound(audioClipRefsSO.warning[0], Vector3.zero);
+    }
+    
+    public void PlayWarningSound(Vector3 position) {
+        PlaySound(audioClipRefsSO.warning[1], position);
     }
 
     public void ChangeVolume() {

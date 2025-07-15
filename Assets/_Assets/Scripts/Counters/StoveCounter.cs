@@ -164,4 +164,8 @@ public class StoveCounter : BaseCounter, IHasProgess {
         }
         return null;
     }
+
+    public bool IsFried() {
+        return state == State.Fried;
+    }
 }
