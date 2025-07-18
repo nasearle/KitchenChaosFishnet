@@ -1,5 +1,7 @@
 using System;
 using FishNet.Object;
+using FishNet.Object.Prediction;
+using FishNet.Transporting;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -10,6 +12,33 @@ public class Player : NetworkBehaviour, IKitchenObjectParent {
     public event EventHandler<OnSelectedCounterChangedEventArgs> OnSelectedCounterChanged;
     public class OnSelectedCounterChangedEventArgs : EventArgs {
         public BaseCounter SelectedCounter;
+    }
+
+    public struct ReplicateData : IReplicateData {
+        public Vector2 InputVector;
+        public ReplicateData(Vector2 inputVector) : this() {
+            InputVector = inputVector;
+        }
+        
+        private uint _tick;
+        public void Dispose() { }
+        public uint GetTick() => _tick;
+        public void SetTick(uint value) => _tick = value;
+    }
+
+    public struct ReconcileData : IReconcileData {
+        public Vector3 Position;
+        public Quaternion Rotation;
+        
+        public ReconcileData(Vector3 position, Quaternion rotation) : this() {
+            Position = position;
+            Rotation = rotation;
+        }
+        
+        private uint _tick;
+        public void Dispose() { }
+        public uint GetTick() => _tick;
+        public void SetTick(uint value) => _tick = value;
     }
     
     [SerializeField] private float moveSpeed = 5f;
@@ -27,7 +56,7 @@ public class Player : NetworkBehaviour, IKitchenObjectParent {
         float playerHeight = 2f;
         
         return !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight,
-            playerRadius, moveDir, moveSpeed * Time.deltaTime);
+            playerRadius, moveDir, moveSpeed * (float)TimeManager.TickDelta);
     }
 
     private void Awake() {
@@ -54,9 +83,55 @@ public class Player : NetworkBehaviour, IKitchenObjectParent {
             _selectedCounter.Interact(this);
         }
     }
+    
+    public override void OnStartNetwork()
+    {
+        TimeManager.OnTick += TimeManager_OnTick;
+        TimeManager.OnPostTick += TimeManager_OnPostTick;
+    }
+    
+    public override void OnStopNetwork()
+    {
+        TimeManager.OnTick -= TimeManager_OnTick;
+        TimeManager.OnPostTick -= TimeManager_OnPostTick;
+    }
+    
+    private void TimeManager_OnTick() {
+        HandleMovementReplicate(CreateReplicateData());
+    }
+
+    private ReplicateData CreateReplicateData() {
+        if (!IsOwner) {
+            return default;
+        }
+        
+        Vector2 inputVector = GameInput.Instance.GetMovementVectorNormalized();
+        return new ReplicateData(inputVector);
+    }
+
+    
+    private void TimeManager_OnPostTick() {
+        CreateReconcile();
+    }
+    
+    public override void CreateReconcile()
+    {
+        transform.GetPositionAndRotation(out Vector3 position, out Quaternion rotation);
+        ReconcileData data = new ReconcileData(position, rotation);
+        ReconcileState(data);
+    }
+    
+    [Reconcile]
+    private void ReconcileState(ReconcileData data, Channel channel = Channel.Unreliable)
+    {
+        transform.SetPositionAndRotation(data.Position, data.Rotation); 
+    }
 
     private void Update() {
-        HandleMovement();
+        if (!IsOwner) return;
+        // HandleMovement();
+        // Vector2 inputVector = GameInput.Instance.GetMovementVectorNormalized();
+        // HandleMovementServerRpc(inputVector);
         HandleCounterSelection();
     }
 
@@ -85,8 +160,12 @@ public class Player : NetworkBehaviour, IKitchenObjectParent {
         }
     }
 
-    private void HandleMovement() {
-        Vector2 inputVector = GameInput.Instance.GetMovementVectorNormalized();
+    [Replicate]
+    private void HandleMovementReplicate(ReplicateData data, ReplicateState state = ReplicateState.Invalid, Channel channel = Channel.Unreliable) {
+        HandleMovement(data.InputVector);
+    }
+
+    private void HandleMovement(Vector2 inputVector) {
         Vector3 moveDir = new Vector3(inputVector.x, 0, inputVector.y);
         bool canMove = PlayerCanMove(moveDir);
 
@@ -107,10 +186,10 @@ public class Player : NetworkBehaviour, IKitchenObjectParent {
         }
 
         if (canMove) {
-            transform.position += moveDir * (moveSpeed * Time.deltaTime);
+            transform.position += moveDir * (moveSpeed * (float)TimeManager.TickDelta);
         }
         
-        transform.forward = Vector3.Slerp(transform.forward, moveDir, rotateSpeed * Time.deltaTime);
+        transform.forward = Vector3.Slerp(transform.forward, moveDir, rotateSpeed * (float)TimeManager.TickDelta);
         
         _isWalking = moveDir != Vector3.zero;
     }
