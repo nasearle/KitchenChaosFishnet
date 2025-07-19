@@ -87,17 +87,16 @@ public class Player : NetworkBehaviour, IKitchenObjectParent {
     public override void OnStartNetwork()
     {
         TimeManager.OnTick += TimeManager_OnTick;
-        TimeManager.OnPostTick += TimeManager_OnPostTick;
     }
     
     public override void OnStopNetwork()
     {
         TimeManager.OnTick -= TimeManager_OnTick;
-        TimeManager.OnPostTick -= TimeManager_OnPostTick;
     }
     
     private void TimeManager_OnTick() {
         HandleMovementReplicate(CreateReplicateData());
+        CreateReconcile();
     }
 
     private ReplicateData CreateReplicateData() {
@@ -108,10 +107,35 @@ public class Player : NetworkBehaviour, IKitchenObjectParent {
         Vector2 inputVector = GameInput.Instance.GetMovementVectorNormalized();
         return new ReplicateData(inputVector);
     }
-
     
-    private void TimeManager_OnPostTick() {
-        CreateReconcile();
+    [Replicate]
+    private void HandleMovementReplicate(ReplicateData data, ReplicateState state = ReplicateState.Invalid, Channel channel = Channel.Unreliable) {
+        Vector3 moveDir = new Vector3(data.InputVector.x, 0, data.InputVector.y);
+        bool canMove = PlayerCanMove(moveDir);
+
+        if (!canMove) {
+            Vector3 moveDirX = new Vector3(moveDir.x, 0, 0).normalized;
+            canMove = (moveDir.x < -.5f || moveDir.x > .5f) && PlayerCanMove(moveDirX);
+
+            if (canMove) {
+                moveDir = moveDirX;
+            } else {
+                Vector3 moveDirZ = new Vector3(0, 0, moveDir.z).normalized;
+                canMove = (moveDir.z < -.5f || moveDir.z > .5f) && PlayerCanMove(moveDirZ);
+
+                if (canMove) {
+                    moveDir = moveDirZ;
+                }
+            }
+        }
+
+        if (canMove) {
+            transform.position += moveDir * (moveSpeed * (float)TimeManager.TickDelta);
+        }
+        
+        transform.forward = Vector3.Slerp(transform.forward, moveDir, rotateSpeed * (float)TimeManager.TickDelta);
+        
+        _isWalking = moveDir != Vector3.zero;
     }
     
     public override void CreateReconcile()
@@ -158,40 +182,6 @@ public class Player : NetworkBehaviour, IKitchenObjectParent {
         } else {
             SetSelectedCounter(null);
         }
-    }
-
-    [Replicate]
-    private void HandleMovementReplicate(ReplicateData data, ReplicateState state = ReplicateState.Invalid, Channel channel = Channel.Unreliable) {
-        HandleMovement(data.InputVector);
-    }
-
-    private void HandleMovement(Vector2 inputVector) {
-        Vector3 moveDir = new Vector3(inputVector.x, 0, inputVector.y);
-        bool canMove = PlayerCanMove(moveDir);
-
-        if (!canMove) {
-            Vector3 moveDirX = new Vector3(moveDir.x, 0, 0).normalized;
-            canMove = (moveDir.x < -.5f || moveDir.x > .5f) && PlayerCanMove(moveDirX);
-
-            if (canMove) {
-                moveDir = moveDirX;
-            } else {
-                Vector3 moveDirZ = new Vector3(0, 0, moveDir.z).normalized;
-                canMove = (moveDir.z < -.5f || moveDir.z > .5f) && PlayerCanMove(moveDirZ);
-
-                if (canMove) {
-                    moveDir = moveDirZ;
-                }
-            }
-        }
-
-        if (canMove) {
-            transform.position += moveDir * (moveSpeed * (float)TimeManager.TickDelta);
-        }
-        
-        transform.forward = Vector3.Slerp(transform.forward, moveDir, rotateSpeed * (float)TimeManager.TickDelta);
-        
-        _isWalking = moveDir != Vector3.zero;
     }
 
     private void SetSelectedCounter(BaseCounter selectedCounter) {
