@@ -6,7 +6,14 @@ using UnityEngine;
 using UnityEngine.Serialization;
 
 public class Player : NetworkBehaviour, IKitchenObjectParent {
-    // public static Player Instance { get; private set; }
+    public static event EventHandler OnAnyPlayerSpawned;
+    public static event EventHandler OnAnyObjectPickedUp;
+    public static void ResetStaticData() {
+        OnAnyPlayerSpawned = null;
+        OnAnyObjectPickedUp = null;
+    }
+    
+    public static Player LocalInstance { get; private set; }
 
     public event EventHandler OnObjectPickedUp;
     public event EventHandler<OnSelectedCounterChangedEventArgs> OnSelectedCounterChanged;
@@ -58,11 +65,7 @@ public class Player : NetworkBehaviour, IKitchenObjectParent {
         return !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight,
             playerRadius, moveDir, moveSpeed * (float)TimeManager.TickDelta);
     }
-
-    private void Awake() {
-        // Instance = this;
-    }
-
+    
     private void Start() {
         GameInput.Instance.OnInteractAction += GameInputOnInteractAction;
         GameInput.Instance.OnInteractAlternateAction += GameInputOnInteractAlternateAction;
@@ -84,13 +87,17 @@ public class Player : NetworkBehaviour, IKitchenObjectParent {
         }
     }
     
-    public override void OnStartNetwork()
-    {
+    public override void OnStartNetwork() {
+        if (Owner.IsLocalClient) {
+            LocalInstance = this;
+        }
+        
+        OnAnyPlayerSpawned?.Invoke(this, EventArgs.Empty);
+        
         TimeManager.OnTick += TimeManager_OnTick;
     }
     
-    public override void OnStopNetwork()
-    {
+    public override void OnStopNetwork() {
         TimeManager.OnTick -= TimeManager_OnTick;
     }
     
@@ -138,16 +145,14 @@ public class Player : NetworkBehaviour, IKitchenObjectParent {
         _isWalking = moveDir != Vector3.zero;
     }
     
-    public override void CreateReconcile()
-    {
+    public override void CreateReconcile() {
         transform.GetPositionAndRotation(out Vector3 position, out Quaternion rotation);
         ReconcileData data = new ReconcileData(position, rotation);
         ReconcileState(data);
     }
     
     [Reconcile]
-    private void ReconcileState(ReconcileData data, Channel channel = Channel.Unreliable)
-    {
+    private void ReconcileState(ReconcileData data, Channel channel = Channel.Unreliable) {
         transform.SetPositionAndRotation(data.Position, data.Rotation); 
     }
 
@@ -200,6 +205,7 @@ public class Player : NetworkBehaviour, IKitchenObjectParent {
 
         if (kitchenObject != null) {
             OnObjectPickedUp?.Invoke(this, EventArgs.Empty);
+            OnAnyObjectPickedUp?.Invoke(this, EventArgs.Empty);
         }
     }
 

@@ -7,5 +7,6 @@ public class ResetStaticDataManager : MonoBehaviour {
         BaseCounter.ResetStaticData();
         TrashCounter.ResetStaticData();
         PlateKitchenObject.ResetStaticData();
+        Player.ResetStaticData();
     }
 }
