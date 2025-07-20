@@ -1,4 +1,5 @@
 using System;
+using FishNet.Object;
 using UnityEngine;
 
 public class BaseCounter : MonoBehaviour, IKitchenObjectParent {
@@ -42,5 +43,9 @@ public class BaseCounter : MonoBehaviour, IKitchenObjectParent {
 
     public bool HasKitchenObject() {
         return _kitchenObject != null;
+    }
+    
+    public NetworkObject GetNetworkObject() {
+        return null;
     }
 }

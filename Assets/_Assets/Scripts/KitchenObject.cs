@@ -1,6 +1,7 @@
+using FishNet.Object;
 using UnityEngine;
 
-public class KitchenObject : MonoBehaviour {
+public class KitchenObject : NetworkBehaviour {
     [SerializeField] private KitchenObjectSO kitchenObjectSO;
 
     private IKitchenObjectParent _kitchenObjectParent;
@@ -24,9 +25,8 @@ public class KitchenObject : MonoBehaviour {
         
         kitchenObjectParent.SetKitchenObject(this);
         
-        // Place visual on the new counter
-        transform.parent = kitchenObjectParent.GetKitchenObjectFollowTransform();
-        transform.localPosition = Vector3.zero;
+        // transform.parent = kitchenObjectParent.GetKitchenObjectFollowTransform();
+        // transform.localPosition = Vector3.zero;
     }
 
     public IKitchenObjectParent GetKitchenObjectParent() {
@@ -48,13 +48,8 @@ public class KitchenObject : MonoBehaviour {
         return false;
     }
 
-    public static KitchenObject SpawnKitchenObject(KitchenObjectSO kitchenObjectSo,
+    public static void SpawnKitchenObject(KitchenObjectSO kitchenObjectSo,
         IKitchenObjectParent kitchenObjectParent) {
-        Transform kitchenObjectTransform = Instantiate(kitchenObjectSo.prefab);
-        KitchenObject kitchenObject = kitchenObjectTransform.GetComponent<KitchenObject>();
-        // ReSharper disable once Unity.PerformanceCriticalCodeInvocation
-        // Marked as expensive because of a LogError that should never happen so commenting out.
-        kitchenObject.SetKitchenObjectParent(kitchenObjectParent);
-        return kitchenObject;
+        KitchenGameMultiplayer.Instance.SpawnKitchenObject(kitchenObjectSo, kitchenObjectParent);
     }
 }
