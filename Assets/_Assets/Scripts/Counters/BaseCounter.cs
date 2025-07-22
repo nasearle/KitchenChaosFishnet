@@ -2,7 +2,7 @@ using System;
 using FishNet.Object;
 using UnityEngine;
 
-public class BaseCounter : MonoBehaviour, IKitchenObjectParent {
+public class BaseCounter : NetworkBehaviour, IKitchenObjectParent {
     public static event EventHandler OnAnyObjectPlacedHere;
     
     public static void ResetStaticData() {
@@ -26,6 +26,9 @@ public class BaseCounter : MonoBehaviour, IKitchenObjectParent {
     }
 
     public void SetKitchenObject(KitchenObject kitchenObject) {
+        Debug.Log("BaseCounter.SetKitchenObject");
+        Debug.Log(this);
+        // Debug.Log(kitchenObject);
         _kitchenObject = kitchenObject;
 
         if (kitchenObject != null) {
@@ -46,6 +49,6 @@ public class BaseCounter : MonoBehaviour, IKitchenObjectParent {
     }
     
     public NetworkObject GetNetworkObject() {
-        return null;
+        return NetworkObject;
     }
 }

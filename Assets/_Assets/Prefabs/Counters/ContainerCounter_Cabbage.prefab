@@ -8,14 +8,26 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1243426303011909937, guid: 849618aabf14a194098a9fb248cceaf7, type: 3}
+      propertyPath: <AssetPathHash>k__BackingField
+      value: 10376649700815864186
+      objectReference: {fileID: 0}
     - target: {fileID: 3504944383989635817, guid: 849618aabf14a194098a9fb248cceaf7, type: 3}
       propertyPath: kitchenObjectSO
       value: 
       objectReference: {fileID: 11400000, guid: 67adabcf7e583cd4ba09c822f137d9eb, type: 2}
+    - target: {fileID: 3504944383989635817, guid: 849618aabf14a194098a9fb248cceaf7, type: 3}
+      propertyPath: _addedNetworkObject
+      value: 
+      objectReference: {fileID: 1533878259932611887}
     - target: {fileID: 3969771805466242103, guid: 849618aabf14a194098a9fb248cceaf7, type: 3}
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 21300000, guid: e1c23b5aded59d84da30738d3267a6c9, type: 3}
+    - target: {fileID: 4729789922783306861, guid: 849618aabf14a194098a9fb248cceaf7, type: 3}
+      propertyPath: _addedNetworkObject
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 5844741951082988085, guid: 849618aabf14a194098a9fb248cceaf7, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -60,8 +72,70 @@ PrefabInstance:
       propertyPath: m_Name
       value: ContainerCounter_Cabbage
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 5474419330696495320, guid: 849618aabf14a194098a9fb248cceaf7, type: 3}
+    - {fileID: 5267647530682275729, guid: 849618aabf14a194098a9fb248cceaf7, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7832972210733655332, guid: 849618aabf14a194098a9fb248cceaf7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1533878259932611887}
   m_SourcePrefab: {fileID: 100100000, guid: 849618aabf14a194098a9fb248cceaf7, type: 3}
+--- !u!1 &4082162589171745582 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7832972210733655332, guid: 849618aabf14a194098a9fb248cceaf7, type: 3}
+  m_PrefabInstance: {fileID: 6058062257386006026}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1533878259932611887
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4082162589171745582}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26b716c41e9b56b4baafaf13a523ba2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  <IsNested>k__BackingField: 0
+  WasActiveDuringEdit: 0
+  WasActiveDuringEdit_Set1: 1
+  <ComponentIndex>k__BackingField: 0
+  <PredictedSpawn>k__BackingField: {fileID: 0}
+  <PredictedOwner>k__BackingField: {fileID: 0}
+  NetworkBehaviours: []
+  InitializedParentNetworkBehaviour: {fileID: 0}
+  InitializedNestedNetworkObjects: []
+  RuntimeParentNetworkBehaviour: {fileID: 0}
+  RuntimeChildNetworkBehaviours: []
+  _isNetworked: 1
+  _isSpawnable: 0
+  _isGlobal: 0
+  _initializeOrder: 0
+  _preventDespawnOnDisconnect: 0
+  _defaultDespawnType: 0
+  NetworkObserver: {fileID: 0}
+  _enablePrediction: 0
+  _predictionType: 0
+  _graphicalObject: {fileID: 0}
+  _detachGraphicalObject: 0
+  _enableStateForwarding: 1
+  _networkTransform: {fileID: 0}
+  _ownerInterpolation: 1
+  _ownerSmoothedProperties: 4294967295
+  _adaptiveInterpolation: 3
+  _spectatorSmoothedProperties: 4294967295
+  _spectatorInterpolation: 2
+  _enableTeleport: 0
+  _teleportThreshold: 1
+  <PrefabId>k__BackingField: 65535
+  <SpawnableCollectionId>k__BackingField: 0
+  <AssetPathHash>k__BackingField: 0
+  <SceneId>k__BackingField: 0
+  SerializedTransformProperties:
+    Position: {x: 0, y: 0, z: 0}
+    Rotation: {x: 0, y: 0, z: 0, w: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    IsValid: 0

@@ -8,6 +8,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -7948363440588402604, guid: 2d74ad93fc64e2c43ad31da12156708c, type: 3}
+      propertyPath: <AssetPathHash>k__BackingField
+      value: 11253436306069877800
+      objectReference: {fileID: 0}
+    - target: {fileID: -4516086977340603128, guid: 2d74ad93fc64e2c43ad31da12156708c, type: 3}
+      propertyPath: _addedNetworkObject
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 5903240426466321232, guid: 2d74ad93fc64e2c43ad31da12156708c, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -52,7 +60,8 @@ PrefabInstance:
       propertyPath: m_Name
       value: PlatesCounter
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 0}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 5903240426466321232, guid: 2d74ad93fc64e2c43ad31da12156708c, type: 3}
@@ -65,6 +74,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7801495195574928449, guid: 2d74ad93fc64e2c43ad31da12156708c, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3190019077178939938}
+    - targetCorrespondingSourceObject: {fileID: 7801495195574928449, guid: 2d74ad93fc64e2c43ad31da12156708c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -7022822954883738061}
   m_SourcePrefab: {fileID: 100100000, guid: 2d74ad93fc64e2c43ad31da12156708c, type: 3}
 --- !u!4 &5129014522717429531 stripped
 Transform:
@@ -93,8 +105,63 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64af1e234449b78469a58b08f54769b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: -7022822954883738061}
+  _networkObjectCache: {fileID: 0}
   counterTopPoint: {fileID: 7148430391220466222}
   plateKitchenObjectSO: {fileID: 11400000, guid: 0b7c13ea2c472184c8ea3f76f67cee71, type: 2}
+--- !u!114 &-7022822954883738061
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8828485628377004042}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26b716c41e9b56b4baafaf13a523ba2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  <IsNested>k__BackingField: 0
+  WasActiveDuringEdit: 0
+  WasActiveDuringEdit_Set1: 1
+  <ComponentIndex>k__BackingField: 0
+  <PredictedSpawn>k__BackingField: {fileID: 0}
+  <PredictedOwner>k__BackingField: {fileID: 0}
+  NetworkBehaviours: []
+  InitializedParentNetworkBehaviour: {fileID: 0}
+  InitializedNestedNetworkObjects: []
+  RuntimeParentNetworkBehaviour: {fileID: 0}
+  RuntimeChildNetworkBehaviours: []
+  _isNetworked: 1
+  _isSpawnable: 0
+  _isGlobal: 0
+  _initializeOrder: 0
+  _preventDespawnOnDisconnect: 0
+  _defaultDespawnType: 0
+  NetworkObserver: {fileID: 0}
+  _enablePrediction: 0
+  _predictionType: 0
+  _graphicalObject: {fileID: 0}
+  _detachGraphicalObject: 0
+  _enableStateForwarding: 1
+  _networkTransform: {fileID: 0}
+  _ownerInterpolation: 1
+  _ownerSmoothedProperties: 255
+  _adaptiveInterpolation: 3
+  _spectatorSmoothedProperties: 255
+  _spectatorInterpolation: 2
+  _enableTeleport: 0
+  _teleportThreshold: 1
+  <PrefabId>k__BackingField: 65535
+  <SpawnableCollectionId>k__BackingField: 0
+  <AssetPathHash>k__BackingField: 11253436306069877800
+  <SceneId>k__BackingField: 0
+  SerializedTransformProperties:
+    Position: {x: 0, y: 0, z: 0}
+    Rotation: {x: 0, y: 0, z: 0, w: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    IsValid: 0
 --- !u!1001 &5797970282717491812
 PrefabInstance:
   m_ObjectHideFlags: 0

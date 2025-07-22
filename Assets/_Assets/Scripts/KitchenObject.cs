@@ -1,3 +1,4 @@
+using System;
 using FishNet.Object;
 using UnityEngine;
 
@@ -11,6 +12,25 @@ public class KitchenObject : NetworkBehaviour {
     }
 
     public void SetKitchenObjectParent(IKitchenObjectParent kitchenObjectParent) {
+        if (IsServerStarted) {
+            // If we are already running on the server, call the client RPC directly (with RunLocally set to true) to
+            // avoid the issue where a UGS server can't call a Server RPC from the server itself.
+            SetKitchenObjectParentClientRpc(kitchenObjectParent.GetNetworkObject());
+        } else {
+            SetKitchenObjectParentServerRpc(kitchenObjectParent.GetNetworkObject());
+        }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void SetKitchenObjectParentServerRpc(NetworkObject kitchenObjectParentNetworkObject) {
+        SetKitchenObjectParentClientRpc(kitchenObjectParentNetworkObject);
+    }
+
+    [ObserversRpc(RunLocally = true)]
+    private void SetKitchenObjectParentClientRpc(NetworkObject kitchenObjectParentNetworkObject) {
+        IKitchenObjectParent kitchenObjectParent =
+            kitchenObjectParentNetworkObject.GetComponent<IKitchenObjectParent>();
+        
         // Clear previous counter
         if (_kitchenObjectParent != null) {
             _kitchenObjectParent.ClearKitchenObject();
@@ -24,9 +44,8 @@ public class KitchenObject : NetworkBehaviour {
         }
         
         kitchenObjectParent.SetKitchenObject(this);
-        
-        // transform.parent = kitchenObjectParent.GetKitchenObjectFollowTransform();
-        // transform.localPosition = Vector3.zero;
+        NetworkObject.transform.SetParent(kitchenObjectParent.GetKitchenObjectFollowTransform());
+        NetworkObject.transform.localPosition = Vector3.zero;
     }
 
     public IKitchenObjectParent GetKitchenObjectParent() {

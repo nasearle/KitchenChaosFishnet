@@ -18,7 +18,13 @@ public class CuttingCounter : BaseCounter, IHasProgess {
         if (!HasKitchenObject()) {
             if (player.HasKitchenObject()) {
                 if (HasRecipeWithInput(player.GetKitchenObject().GetKitchenObjectSO())) {
+                    
+                    // There is a bug here where the setkitchenobjectparent happens over the network, but the code below
+                    // this line expects the kitchen object parent to be set synchronously on the local client
+                    
                     player.GetKitchenObject().SetKitchenObjectParent(this);
+                    Debug.Log("This in interact");
+                    Debug.Log(this);
                     _cuttingProgress = 0;
                     
                     CuttingRecipeSO cuttingRecipeSO = GetCuttingRecipeSOWithInput(GetKitchenObject().GetKitchenObjectSO());
