@@ -26,9 +26,6 @@ public class BaseCounter : NetworkBehaviour, IKitchenObjectParent {
     }
 
     public void SetKitchenObject(KitchenObject kitchenObject) {
-        Debug.Log("BaseCounter.SetKitchenObject");
-        Debug.Log(this);
-        // Debug.Log(kitchenObject);
         _kitchenObject = kitchenObject;
 
         if (kitchenObject != null) {
