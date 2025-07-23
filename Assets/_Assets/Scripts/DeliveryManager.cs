@@ -72,6 +72,9 @@ public class DeliveryManager : NetworkBehaviour {
 
                 if (plateContentsMatchesRecipe) {
                     // Player delivered the correct recipe!
+                    
+                    // Leaving deliveries to happen on the server without prediction. There is actual logic here not
+                    // just animations so it needs to be accurate. Also delay on a delivery feels ok to the player.
                     DeliverCorrectRecipeServerRpc(i);
                     return;
                 }
