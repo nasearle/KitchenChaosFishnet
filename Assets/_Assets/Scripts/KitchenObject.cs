@@ -30,7 +30,7 @@ public class KitchenObject : NetworkBehaviour {
     private void SetKitchenObjectParentClientRpc(NetworkObject kitchenObjectParentNetworkObject) {
         IKitchenObjectParent kitchenObjectParent =
             kitchenObjectParentNetworkObject.GetComponent<IKitchenObjectParent>();
-        
+
         // Clear previous counter
         if (_kitchenObjectParent != null) {
             _kitchenObjectParent.ClearKitchenObject();
@@ -53,9 +53,11 @@ public class KitchenObject : NetworkBehaviour {
     }
 
     public void DestroySelf() {
+        Despawn();
+    }
+
+    public void ClearKitchenObjectOnParent() {
         _kitchenObjectParent.ClearKitchenObject();
-        
-        Destroy(gameObject);
     }
 
     public bool TryGetPlate(out PlateKitchenObject plateKitchenObject) {
@@ -70,5 +72,9 @@ public class KitchenObject : NetworkBehaviour {
     public static void SpawnKitchenObject(KitchenObjectSO kitchenObjectSo,
         IKitchenObjectParent kitchenObjectParent) {
         KitchenGameMultiplayer.Instance.SpawnKitchenObject(kitchenObjectSo, kitchenObjectParent);
+    }
+
+    public static void DestroyKitchenObject(KitchenObject kitchenObject) {
+        KitchenGameMultiplayer.Instance.DestroyKitchenObject(kitchenObject);
     }
 }

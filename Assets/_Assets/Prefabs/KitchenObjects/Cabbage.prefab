@@ -48,7 +48,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _componentIndexCache: 0
   _addedNetworkObject: {fileID: 3953074448810279025}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 3953074448810279025}
   kitchenObjectSO: {fileID: 11400000, guid: 67adabcf7e583cd4ba09c822f137d9eb, type: 2}
 --- !u!114 &3953074448810279025
 MonoBehaviour:
@@ -68,7 +68,9 @@ MonoBehaviour:
   <ComponentIndex>k__BackingField: 0
   <PredictedSpawn>k__BackingField: {fileID: 0}
   <PredictedOwner>k__BackingField: {fileID: 0}
-  NetworkBehaviours: []
+  NetworkBehaviours:
+  - {fileID: -2794234183956446679}
+  - {fileID: 0}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -93,15 +95,15 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 65535
+  <PrefabId>k__BackingField: 11
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 8747171045979168343
   <SceneId>k__BackingField: 0
   SerializedTransformProperties:
-    Position: {x: 0, y: 0, z: 0}
-    Rotation: {x: 0, y: 0, z: 0, w: 0}
-    Scale: {x: 0, y: 0, z: 0}
-    IsValid: 0
+    Position: {x: -3.9, y: 0, z: 0.38}
+    Rotation: {x: 0, y: 0, z: 0, w: 1}
+    Scale: {x: 1, y: 1, z: 1}
+    IsValid: 1
 --- !u!1001 &822391146806551780
 PrefabInstance:
   m_ObjectHideFlags: 0

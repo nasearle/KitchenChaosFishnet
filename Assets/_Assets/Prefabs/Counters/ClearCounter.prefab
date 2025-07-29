@@ -309,7 +309,7 @@ MonoBehaviour:
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
   NetworkObserver: {fileID: 0}
-  _enablePrediction: 0
+  _enablePrediction: 1
   _predictionType: 0
   _graphicalObject: {fileID: 0}
   _detachGraphicalObject: 0

@@ -1,4 +1,5 @@
 using System;
+using FishNet.CodeGenerating;
 using FishNet.Object;
 using FishNet.Object.Prediction;
 using FishNet.Transporting;
@@ -99,6 +100,9 @@ public class Player : NetworkBehaviour, IKitchenObjectParent {
     
     public override void OnStopNetwork() {
         TimeManager.OnTick -= TimeManager_OnTick;
+        
+        GameInput.Instance.OnInteractAction -= GameInputOnInteractAction;
+        GameInput.Instance.OnInteractAlternateAction -= GameInputOnInteractAlternateAction;
     }
     
     private void TimeManager_OnTick() {
@@ -120,6 +124,16 @@ public class Player : NetworkBehaviour, IKitchenObjectParent {
         Vector3 moveDir = new Vector3(data.InputVector.x, 0, data.InputVector.y);
         bool canMove = PlayerCanMove(moveDir);
 
+
+        // if (state.ContainsReplayed()) {
+        //     // Debug.Log($"Replaying at tick {data.GetTick()}, delta: {(float)TimeManager.TickDelta}, pos: {transform.position}");
+        //     Debug.Log($"Owner.ClientId={Owner.ClientId} REPLAY: Tick={data.GetTick()}, LocalTick={NetworkManager.TimeManager.LocalTick}, " +
+        //               $"LastRemote={NetworkManager.TimeManager.LastPacketTick.LastRemoteTick}");
+        // } else {
+        //     Debug.Log($"Owner.ClientId={Owner.ClientId} Normal replicate at tick {data.GetTick()}, delta: {(float)TimeManager.TickDelta}, pos: {transform.position}");
+        // }
+        
+        
         if (!canMove) {
             Vector3 moveDirX = new Vector3(moveDir.x, 0, 0).normalized;
             canMove = (moveDir.x < -.5f || moveDir.x > .5f) && PlayerCanMove(moveDirX);
@@ -143,6 +157,11 @@ public class Player : NetworkBehaviour, IKitchenObjectParent {
         transform.forward = Vector3.Slerp(transform.forward, moveDir, rotateSpeed * (float)TimeManager.TickDelta);
         
         _isWalking = moveDir != Vector3.zero;
+
+        // if (Owner.ClientId == 0 && !state.ContainsReplayed()) {
+        //     Debug.Log(
+        //         $"REPLICATE DATA: Tick={data.GetTick()} Position={transform.position}, Rotation={transform.rotation}");
+        // }
     }
     
     public override void CreateReconcile() {
@@ -153,7 +172,7 @@ public class Player : NetworkBehaviour, IKitchenObjectParent {
     
     [Reconcile]
     private void ReconcileState(ReconcileData data, Channel channel = Channel.Unreliable) {
-        transform.SetPositionAndRotation(data.Position, data.Rotation); 
+        transform.SetPositionAndRotation(data.Position, data.Rotation);
     }
 
     private void Update() {

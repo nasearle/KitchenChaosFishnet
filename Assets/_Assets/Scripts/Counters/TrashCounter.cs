@@ -1,4 +1,5 @@
 using System;
+using FishNet.Object;
 using UnityEngine;
 
 public class TrashCounter : BaseCounter {
@@ -8,12 +9,23 @@ public class TrashCounter : BaseCounter {
         OnAnyObjectTrashed = null;
     }
     public event EventHandler OnPlayerTrashedObject;
+    
     public override void Interact(Player player) {
         if (player.HasKitchenObject()) {
-            player.GetKitchenObject().DestroySelf();
             
-            OnPlayerTrashedObject?.Invoke(this, EventArgs.Empty);
-            OnAnyObjectTrashed?.Invoke(this, EventArgs.Empty);
+            KitchenObject.DestroyKitchenObject(player.GetKitchenObject());
+            InteractLogicServerRpc();
         }
+    }
+    
+    [ServerRpc(RequireOwnership = false)]
+    private void InteractLogicServerRpc() {
+        InteractLogicClientRpc();
+    }
+
+    [ObserversRpc]
+    private void InteractLogicClientRpc() {
+        OnPlayerTrashedObject?.Invoke(this, EventArgs.Empty);
+        OnAnyObjectTrashed?.Invoke(this, EventArgs.Empty);
     }
 }
