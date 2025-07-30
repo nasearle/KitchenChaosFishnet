@@ -8801,7 +8801,7 @@ MonoBehaviour:
   _latencySimulator:
     _enabled: 1
     _simulateHost: 0
-    _latency: 100
+    _latency: 0
     _outOfOrder: 0
     _packetLoss: 0
 --- !u!114 &979217433

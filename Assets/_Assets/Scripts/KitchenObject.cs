@@ -13,8 +13,6 @@ public class KitchenObject : NetworkBehaviour {
 
     public void SetKitchenObjectParent(IKitchenObjectParent kitchenObjectParent) {
         if (IsServerStarted) {
-            // If we are already running on the server, call the client RPC directly (with RunLocally set to true) to
-            // avoid the issue where a UGS server can't call a Server RPC from the server itself.
             SetKitchenObjectParentClientRpc(kitchenObjectParent.GetNetworkObject());
         } else {
             SetKitchenObjectParentServerRpc(kitchenObjectParent.GetNetworkObject());
