@@ -52,20 +52,13 @@ public class Player : NetworkBehaviour, IKitchenObjectParent {
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float rotateSpeed = 10f;
     [SerializeField] private LayerMask countersLayerMask;
+    [SerializeField] private LayerMask collisionsLayerMask;
     [SerializeField] private Transform kitchenObjectHoldPoint;
 
     private bool _isWalking;
     private Vector3 _lastInteractDir;
     private BaseCounter _selectedCounter;
     private KitchenObject _kitchenObject;
-
-    private bool PlayerCanMove(Vector3 moveDir) {
-        float playerRadius = .7f;
-        float playerHeight = 2f;
-        
-        return !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight,
-            playerRadius, moveDir, moveSpeed * (float)TimeManager.TickDelta);
-    }
     
     private void Start() {
         GameInput.Instance.OnInteractAction += GameInputOnInteractAction;
@@ -117,6 +110,15 @@ public class Player : NetworkBehaviour, IKitchenObjectParent {
         
         Vector2 inputVector = GameInput.Instance.GetMovementVectorNormalized();
         return new ReplicateData(inputVector);
+    }
+    
+    private bool PlayerCanMove(Vector3 moveDir) {
+        float playerRadius = .7f;
+        float playerHeight = 2f;
+        float moveDistance = moveSpeed * (float)TimeManager.TickDelta;
+        
+        return !Physics.BoxCast(transform.position, Vector3.one * playerRadius, moveDir, 
+            Quaternion.identity, moveDistance, collisionsLayerMask);
     }
     
     [Replicate]
