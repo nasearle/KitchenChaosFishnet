@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using FishNet.Object;
 using UnityEngine;
 
 public class PlateKitchenObject : KitchenObject {
@@ -30,6 +31,20 @@ public class PlateKitchenObject : KitchenObject {
         if (_kitchenObjectSOList.Contains(kitchenObjectSO)) {
             return false;
         }
+
+        AddIngredientServerRpc(KitchenGameMultiplayer.Instance.GetKitchenObjectSOIndex(kitchenObjectSO));
+        return true;
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void AddIngredientServerRpc(int kitchenObjectSOIndex) {
+        AddIngredientClientRpc(kitchenObjectSOIndex);
+    }
+
+    [ObserversRpc(RunLocally = true)]
+    private void AddIngredientClientRpc(int kitchenObjectSOIndex) {
+        KitchenObjectSO kitchenObjectSO =
+            KitchenGameMultiplayer.Instance.GetKitchenObjectSOFromIndex(kitchenObjectSOIndex);
         _kitchenObjectSOList.Add(kitchenObjectSO);
         
         OnIngredientAdded?.Invoke(this, new OnIngredientAddedEventArgs {
@@ -37,8 +52,6 @@ public class PlateKitchenObject : KitchenObject {
         });
         
         OnAnyObjectPlated?.Invoke(this, EventArgs.Empty);
-        
-        return true;
     }
 
     public List<KitchenObjectSO> GetKitchenObjectSOList() {
