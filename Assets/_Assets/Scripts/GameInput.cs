@@ -36,10 +36,26 @@ public class GameInput : MonoBehaviour {
         }
         
         _playerInputActions.Player.Enable();
+        _playerInputActions.UI.Disable();
         
         _playerInputActions.Player.Interact.performed += InteractOnperformed;
         _playerInputActions.Player.InteractAlternate.performed += InteractAlternateOnperformed;
         _playerInputActions.Player.Pause.performed += PauseOnperformed;
+        
+        _playerInputActions.UI.Pause.performed += PauseOnperformed;
+        
+        GameManager.Instance.OnMultiplayerGamePaused += GameManagerOnMultiplayerGamePaused;
+        GameManager.Instance.OnMultiplayerGameResumed += GameManagerOnMultiplayerGameResumed;
+    }
+    
+    private void GameManagerOnMultiplayerGameResumed(object sender, EventArgs e) {
+        _playerInputActions.Player.Enable();
+        _playerInputActions.UI.Disable();
+    }
+
+    private void GameManagerOnMultiplayerGamePaused(object sender, EventArgs e) {
+        _playerInputActions.Player.Disable();
+        _playerInputActions.UI.Enable();
     }
 
     private void OnDestroy() {

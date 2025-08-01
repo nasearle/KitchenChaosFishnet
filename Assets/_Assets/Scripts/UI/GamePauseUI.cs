@@ -22,17 +22,17 @@ public class GamePauseUI : MonoBehaviour {
     }
 
     private void Start() {
-        GameManager.Instance.OnGamePaused += GameManagerOnGamePaused;
-        GameManager.Instance.OnGameResumed += GameManagerOnGameResumed;
+        GameManager.Instance.OnLocalGamePaused += GameManagerOnLocalGamePaused;
+        GameManager.Instance.OnLocalGameResumed += GameManagerOnLocalGameResumed;
         
         Hide();
     }
 
-    private void GameManagerOnGameResumed(object sender, EventArgs e) {
+    private void GameManagerOnLocalGameResumed(object sender, EventArgs e) {
         Hide();
     }
     
-    private void GameManagerOnGamePaused(object sender, EventArgs e) {
+    private void GameManagerOnLocalGamePaused(object sender, EventArgs e) {
         Show();
     }
 

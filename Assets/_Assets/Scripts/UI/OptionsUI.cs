@@ -64,7 +64,7 @@ public class OptionsUI : MonoBehaviour {
     }
 
     private void Start() {
-        GameManager.Instance.OnGameResumed += GameManagerOnGameResumed;
+        GameManager.Instance.OnLocalGameResumed += GameManagerOnLocalGameResumed;
         
         UpdateVisual();
 
@@ -72,7 +72,7 @@ public class OptionsUI : MonoBehaviour {
         Hide();
     }
 
-    private void GameManagerOnGameResumed(object sender, EventArgs e) {
+    private void GameManagerOnLocalGameResumed(object sender, EventArgs e) {
         Hide();
     }
 
