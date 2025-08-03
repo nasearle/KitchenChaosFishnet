@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using FishNet.Transporting;
 using UnityEngine;
 
 public class GameManager : NetworkBehaviour {
@@ -31,6 +32,7 @@ public class GameManager : NetworkBehaviour {
     private readonly SyncVar<bool> _isGamePaused = new SyncVar<bool>(false);
     private Dictionary<int, bool> _playerReadyDictionary;
     private Dictionary<int, bool> _playerPausedDictionary;
+    private bool _autoTestGamePauseState;
 
     private void Awake() {
         Instance = this;
@@ -47,6 +49,16 @@ public class GameManager : NetworkBehaviour {
     public override void OnStartNetwork() {
         _state.OnChange += StateOnChange;
         _isGamePaused.OnChange += IsGamePausedOnChange;
+
+        if (IsServerStarted) {
+            ServerManager.OnRemoteConnectionState += ServerManagerOnRemoteConnectionState;
+        }
+    }
+
+    private void ServerManagerOnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs connectionStateArgs) {
+        if (connectionStateArgs.ConnectionState == RemoteConnectionState.Stopped) {
+            _autoTestGamePauseState = true;
+        }
     }
 
     private void IsGamePausedOnChange(bool prev, bool next, bool asServer) {
@@ -70,6 +82,8 @@ public class GameManager : NetworkBehaviour {
             _isLocalPlayerReady = true;
             OnLocalPlayerReadyChanged?.Invoke(this, EventArgs.Empty);
             
+            // Note: This will never be called from the server because it's a client-server game so the server will
+            // never be a player. So we don't need do the check and run locally dance.
             SetPlayerReadyServerRpc();
         }
     }
@@ -119,6 +133,13 @@ public class GameManager : NetworkBehaviour {
                 break;
             case State.GameOver:
                 break;
+        }
+    }
+
+    private void LateUpdate() {
+        if (_autoTestGamePauseState) {
+            _autoTestGamePauseState = false;
+            TestGamePausedState();
         }
     }
 

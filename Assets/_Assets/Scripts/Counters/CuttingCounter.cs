@@ -79,6 +79,10 @@ public class CuttingCounter : BaseCounter, IHasProgess {
 
     [ObserversRpc(RunLocally = true)]
     private void CutObjectClientRpc() {
+        if (!HasRecipeWithInput(GetKitchenObject().GetKitchenObjectSO())) {
+            return;
+        }
+        
         _cuttingProgress++;
 
         if (!_localCutAnimationPlayed) {
@@ -98,6 +102,10 @@ public class CuttingCounter : BaseCounter, IHasProgess {
     }
 
     private void TestCuttingProgressDone() {
+        if (!HasRecipeWithInput(GetKitchenObject().GetKitchenObjectSO())) {
+            return;
+        }
+        
         if (IsServerStarted) {
             CuttingRecipeSO cuttingRecipeSO = GetCuttingRecipeSOWithInput(GetKitchenObject().GetKitchenObjectSO());
             if (_cuttingProgress >= cuttingRecipeSO.cuttingProgressMax) {

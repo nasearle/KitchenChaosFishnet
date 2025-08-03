@@ -1,4 +1,6 @@
 using System;
+using FishNet;
+using FishNet.Managing;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -6,9 +8,14 @@ using UnityEngine.UI;
 public class GameOverUI : MonoBehaviour {
     [SerializeField] private TextMeshProUGUI recipesDeliveredText;
     [SerializeField] private Button playAgainButton;
+    
+    private NetworkManager _networkManager;
 
     private void Awake() {
+        _networkManager = InstanceFinder.NetworkManager;
+        
         playAgainButton.onClick.AddListener(() => {
+            _networkManager.ClientManager.StopConnection();
             Loader.Load(Loader.Scene.MainMenuScene);
         });
     }
