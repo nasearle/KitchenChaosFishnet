@@ -1,10 +1,14 @@
 using System;
 using System.Collections.Generic;
+using FishNet.Component.Spawning;
 using FishNet.Connection;
+using FishNet.Managing;
+using FishNet.Managing.Scened;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using FishNet.Transporting;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class GameManager : NetworkBehaviour {
     public static GameManager Instance { get; private set; }
@@ -22,6 +26,9 @@ public class GameManager : NetworkBehaviour {
         GamePlaying,
         GameOver,
     }
+    
+    [SerializeField] private NetworkObject playerPrefab;
+    [SerializeField] private Transform[] playerSpawnPoints;
 
     private readonly SyncVar<State> _state = new SyncVar<State>(State.WaitingToStart);
     private bool _isLocalPlayerReady;
@@ -33,6 +40,7 @@ public class GameManager : NetworkBehaviour {
     private Dictionary<int, bool> _playerReadyDictionary;
     private Dictionary<int, bool> _playerPausedDictionary;
     private bool _autoTestGamePauseState;
+    private int _nextSpawn;
 
     private void Awake() {
         Instance = this;
@@ -52,6 +60,20 @@ public class GameManager : NetworkBehaviour {
 
         if (IsServerStarted) {
             ServerManager.OnRemoteConnectionState += ServerManagerOnRemoteConnectionState;
+            SceneManager.OnClientPresenceChangeEnd += SceneManagerOnClientPresenceChangeEnd;
+        }
+    }
+
+    private void SceneManagerOnClientPresenceChangeEnd(ClientPresenceChangeEventArgs eventArgs) {
+        if (eventArgs.Added) {
+            if (playerPrefab == null) {
+                NetworkManagerExtensions.LogWarning($"Player prefab is empty and cannot be spawned");
+                return;
+            }
+            
+            SetSpawn(playerPrefab.transform, out Vector3 position, out Quaternion rotation);
+            NetworkObject playerNetworkObject = NetworkManager.GetPooledInstantiated(playerPrefab, position, rotation, true);
+            Spawn(playerNetworkObject, eventArgs.Connection);
         }
     }
 
@@ -84,7 +106,9 @@ public class GameManager : NetworkBehaviour {
             
             // Note: This will never be called from the server because it's a client-server game so the server will
             // never be a player. So we don't need do the check and run locally dance.
-            SetPlayerReadyServerRpc();
+            if (IsClientStarted) {
+                SetPlayerReadyServerRpc();
+            }
         }
     }
 
@@ -205,5 +229,32 @@ public class GameManager : NetworkBehaviour {
         
         // All players are unpaused
         _isGamePaused.Value = false;
+    }
+    
+    private void SetSpawn(Transform prefab, out Vector3 pos, out Quaternion rot) {
+        // No spawns specified.
+        if (playerSpawnPoints.Length == 0) {
+            SetSpawnUsingPrefab(prefab, out pos, out rot);
+            return;
+        }
+
+        Transform spawnPoint = playerSpawnPoints[_nextSpawn];
+        if (spawnPoint == null) {
+            SetSpawnUsingPrefab(prefab, out pos, out rot);
+        } else {
+            pos = spawnPoint.position;
+            rot = spawnPoint.rotation;
+        }
+
+        // Increase next spawn and reset if needed.
+        _nextSpawn++;
+        if (_nextSpawn >= playerSpawnPoints.Length) {
+            _nextSpawn = 0;
+        }
+    }
+    
+    private void SetSpawnUsingPrefab(Transform prefab, out Vector3 pos, out Quaternion rot) {
+        pos = prefab.position;
+        rot = prefab.rotation;
     }
 }

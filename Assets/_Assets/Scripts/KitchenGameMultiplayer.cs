@@ -1,7 +1,5 @@
-using FishNet.Connection;
 using UnityEngine;
 using FishNet.Object;
-using FishNet.Serializing;
 
 public class KitchenGameMultiplayer : NetworkBehaviour {
      public static KitchenGameMultiplayer Instance { get; private set; }
