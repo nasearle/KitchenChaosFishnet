@@ -16611,7 +16611,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1822429118
 RectTransform:
   m_ObjectHideFlags: 0
@@ -16646,7 +16646,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 07038d7b06d93b64ea812862e9bea1d1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _playAgainButton: {fileID: 2043705780}
+  playAgainButton: {fileID: 2043705780}
 --- !u!1 &1835116767
 GameObject:
   m_ObjectHideFlags: 0

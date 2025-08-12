@@ -6,9 +6,15 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class ClientDisconnectedUI : MonoBehaviour {
-    [SerializeField] private Button _playAgainButton;
+    [SerializeField] private Button playAgainButton;
     
     private NetworkManager _networkManager;
+    
+    private void Awake() {
+        playAgainButton.onClick.AddListener(() => {
+            Loader.Load(Loader.Scene.MainMenuScene);
+        });
+    }
 
     private void Start() {
         _networkManager = InstanceFinder.NetworkManager;
@@ -30,5 +36,9 @@ public class ClientDisconnectedUI : MonoBehaviour {
 
     private void Hide() {
         gameObject.SetActive(false);
+    }
+
+    private void OnDestroy() {
+        _networkManager.ClientManager.OnClientConnectionState -= ClientManagerOnClientConnectionState;
     }
 }
