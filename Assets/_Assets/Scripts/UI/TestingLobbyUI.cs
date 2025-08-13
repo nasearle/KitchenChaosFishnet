@@ -26,26 +26,26 @@ public class TestingLobbyUI : MonoBehaviour {
 
     private void Start() {
         if (CurrentPlayer.ReadOnlyTags().Length > 0 && CurrentPlayer.ReadOnlyTags()[0] == "server") {
-            LobbyPlayerConnections.Instance.StartServer();
+            _networkManager.ServerManager.StartConnection();
         }
         
         joinGameButton.onClick.AddListener(() => {
-            LobbyPlayerConnections.Instance.StartClient();
+            LobbyPlayerConnection.Instance.StartClient();
         });
         
-        // if (LobbyPlayerConnections.Instance != null) {
+        // if (LobbyPlayerConnection.Instance != null) {
         //     joinGameButton.onClick.AddListener(() => {
-        //         LobbyPlayerConnections.Instance.StartClient();
+        //         LobbyPlayerConnection.Instance.StartClient();
         //     });
         // } else {
-        //     LobbyPlayerConnections.OnAnyLobbyPlayerConnectionSpawned += LobbyPlayerConnectionsOnAnyLobbyPlayerConnectionSpawned;
+        //     LobbyPlayerConnection.OnAnyLobbyPlayerConnectionpawned += LobbyPlayerConnectionOnAnyLobbyPlayerConnectionpawned;
         // }
         
     }
 
-    // private void LobbyPlayerConnectionsOnAnyLobbyPlayerConnectionSpawned(object sender, EventArgs e) {
+    // private void LobbyPlayerConnectionOnAnyLobbyPlayerConnectionpawned(object sender, EventArgs e) {
     //     joinGameButton.onClick.AddListener(() => {
-    //         LobbyPlayerConnections.Instance.StartClient();
+    //         LobbyPlayerConnection.Instance.StartClient();
     //     });
     // }
 }

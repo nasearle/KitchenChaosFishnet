@@ -3,16 +3,16 @@ using UnityEngine;
 
 public class ConnectingUI : MonoBehaviour {
     private void Start() {
-        LobbyPlayerConnections.Instance.OnTryingToJoinGame += LobbyPlayerConnectionsOnTryingToJoinGame;
-        LobbyPlayerConnections.Instance.OnFailedToJoinGame += LobbyPlayerConnectionsOnFailedToJoinGame;
+        LobbyPlayerConnection.Instance.OnTryingToJoinGame += LobbyPlayerConnectionOnTryingToJoinGame;
+        LobbyPlayerConnection.Instance.OnFailedToJoinGame += LobbyPlayerConnectionOnFailedToJoinGame;
         
         Hide();
     }
-    private void LobbyPlayerConnectionsOnFailedToJoinGame(object sender, EventArgs e) {
+    private void LobbyPlayerConnectionOnFailedToJoinGame(object sender, EventArgs e) {
         Hide();
     }
 
-    private void LobbyPlayerConnectionsOnTryingToJoinGame(object sender, EventArgs e) {
+    private void LobbyPlayerConnectionOnTryingToJoinGame(object sender, EventArgs e) {
         Show();
     }
 
@@ -25,7 +25,7 @@ public class ConnectingUI : MonoBehaviour {
     }
 
     private void OnDestroy() {
-        LobbyPlayerConnections.Instance.OnTryingToJoinGame -= LobbyPlayerConnectionsOnTryingToJoinGame;
-        LobbyPlayerConnections.Instance.OnFailedToJoinGame -= LobbyPlayerConnectionsOnFailedToJoinGame;
+        LobbyPlayerConnection.Instance.OnTryingToJoinGame -= LobbyPlayerConnectionOnTryingToJoinGame;
+        LobbyPlayerConnection.Instance.OnFailedToJoinGame -= LobbyPlayerConnectionOnFailedToJoinGame;
     }
 }

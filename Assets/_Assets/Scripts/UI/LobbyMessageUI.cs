@@ -12,12 +12,12 @@ public class LobbyMessageUI : MonoBehaviour {
     }
 
     private void Start() {
-        LobbyPlayerConnections.Instance.OnFailedToJoinGame += LobbyPlayerConnectionsOnFailedToJoinGame;
+        LobbyPlayerConnection.Instance.OnFailedToJoinGame += LobbyPlayerConnectionOnFailedToJoinGame;
         
         Hide();
     }
 
-    private void LobbyPlayerConnectionsOnFailedToJoinGame(object sender, EventArgs e) {
+    private void LobbyPlayerConnectionOnFailedToJoinGame(object sender, EventArgs e) {
         Show();
 
         // Fishnet doesn't have a way to provide a custom reason for getting kicked, so the client doesn't know if they
@@ -34,6 +34,6 @@ public class LobbyMessageUI : MonoBehaviour {
     }
 
     private void OnDestroy() {
-        LobbyPlayerConnections.Instance.OnFailedToJoinGame -= LobbyPlayerConnectionsOnFailedToJoinGame;
+        LobbyPlayerConnection.Instance.OnFailedToJoinGame -= LobbyPlayerConnectionOnFailedToJoinGame;
     }
 }
