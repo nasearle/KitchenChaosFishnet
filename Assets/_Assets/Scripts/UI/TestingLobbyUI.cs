@@ -18,9 +18,10 @@ public class TestingLobbyUI : MonoBehaviour {
         _networkManager.ServerManager.OnServerConnectionState += ServerManagerOnServerConnectionState;
     }
 
+    // TODO: fix this when implementing dedicated server flow.
     private void ServerManagerOnServerConnectionState(ServerConnectionStateArgs stateArgs) {
         if (stateArgs.ConnectionState == LocalConnectionState.Started) {
-            Loader.LoadNetwork(Loader.Scene.CharacterSelectScene);
+            Loader.LoadNetwork(Loader.Scene.ManagersLoadingScene);
         }
     }
 

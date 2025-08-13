@@ -1,4 +1,5 @@
 using FishNet;
+using FishNet.Connection;
 using FishNet.Managing.Scened;
 using SceneManager = UnityEngine.SceneManagement.SceneManager;
 
@@ -9,6 +10,7 @@ public static class Loader {
         LoadingScene,
         LobbyScene,
         CharacterSelectScene,
+        ManagersLoadingScene,
     }
     
     private static Scene _targetScene;
@@ -22,7 +24,11 @@ public static class Loader {
         SceneLoadData sld = new SceneLoadData(targetScene.ToString());
         sld.ReplaceScenes = ReplaceOption.All;
         InstanceFinder.SceneManager.LoadGlobalScenes(sld);
+    }
 
+    public static void LoadSingleClientNetwork(Scene targetScene, NetworkConnection conn) {       
+        SceneLoadData sld = new SceneLoadData(targetScene.ToString());
+        InstanceFinder.SceneManager.LoadConnectionScenes(conn, sld);
     }
 
     public static void LoaderCallback() {

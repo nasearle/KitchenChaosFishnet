@@ -15,6 +15,10 @@ public class SpawnNetworkConnections : MonoBehaviour {
     private NetworkManager _networkManager;
 
     private void SpawnNetworkConnectionPrefab() {
+        if (NetworkConnections.Instance != null) {
+            return;
+        }
+        
         NetworkObject networkConnectionsNetworkObject = _networkManager.GetPooledInstantiated(networkConnectionsPrefab, true);
         
         _networkManager.ServerManager.Spawn(networkConnectionsNetworkObject);
@@ -31,7 +35,7 @@ public class SpawnNetworkConnections : MonoBehaviour {
     }
 
     private void ServerManagerOnServerConnectionState(ServerConnectionStateArgs stateArgs) {
-        if (stateArgs.ConnectionState == LocalConnectionState.Started && NetworkConnections.Instance == null) {
+        if (stateArgs.ConnectionState == LocalConnectionState.Started) {
             SpawnNetworkConnectionPrefab();
         }
     }
