@@ -4,21 +4,28 @@ using FishNet;
 using FishNet.Connection;
 using FishNet.Managing.Server;
 using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using UnityEngine;
 
 public class CharacterSelectReady : NetworkBehaviour {
     public static CharacterSelectReady Instance { get; private set; }
+
+    public event EventHandler OnReadyChanged;
     
-    private Dictionary<int, bool> _playerReadyDictionary;
+    private readonly SyncDictionary<int, bool> _playerReadyDictionary = new();
     
     private ServerManager _serverManager;
 
     private void Awake() {
         Instance = this;
-        
-        _playerReadyDictionary = new Dictionary<int, bool>();
 
         _serverManager = InstanceFinder.ServerManager;
+
+        _playerReadyDictionary.OnChange += PlayerReadyDictionaryOnChange;
+    }
+
+    private void PlayerReadyDictionaryOnChange(SyncDictionaryOperation op, int key, bool value, bool asServer) {
+        OnReadyChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public void SetPlayerReady() {
@@ -41,5 +48,9 @@ public class CharacterSelectReady : NetworkBehaviour {
         if (allClientsReady) {
             Loader.LoadNetwork(Loader.Scene.GameScene);
         }
+    }
+
+    public bool IsPlayerReady(int clientId) {
+        return _playerReadyDictionary.ContainsKey(clientId) && _playerReadyDictionary[clientId];
     }
 }

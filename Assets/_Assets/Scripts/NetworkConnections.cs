@@ -66,6 +66,10 @@ public class NetworkConnections : NetworkBehaviour {
         return _playerDataSyncList.Count > playerIndex;
     }
 
+    public PlayerData GetPlayerDataFromPlayerIndex(int playerIndex) {
+        return _playerDataSyncList[playerIndex];
+    }
+
     private void OnDestroy() {
         _networkManager.ServerManager.OnRemoteConnectionState -= ServerManagerOnRemoteConnectionState;
     }
