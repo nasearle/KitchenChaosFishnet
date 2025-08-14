@@ -1,5 +1,6 @@
 using System;
 using FishNet.CodeGenerating;
+using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Prediction;
 using FishNet.Transporting;
@@ -54,6 +55,7 @@ public class Player : NetworkBehaviour, IKitchenObjectParent {
     [SerializeField] private LayerMask countersLayerMask;
     [SerializeField] private LayerMask collisionsLayerMask;
     [SerializeField] private Transform kitchenObjectHoldPoint;
+    [SerializeField] private PlayerVisual playerVisual;
 
     private bool _isWalking;
     private Vector3 _lastInteractDir;
@@ -63,6 +65,9 @@ public class Player : NetworkBehaviour, IKitchenObjectParent {
     private void Start() {
         GameInput.Instance.OnInteractAction += GameInputOnInteractAction;
         GameInput.Instance.OnInteractAlternateAction += GameInputOnInteractAlternateAction;
+
+        PlayerData playerData = NetworkConnections.Instance.GetPlayerDataFromClientId(OwnerId);
+        playerVisual.SetPlayerColor(NetworkConnections.Instance.GetPlayerColor(playerData.colorId));
     }
 
     private void GameInputOnInteractAlternateAction(object sender, EventArgs e) {
