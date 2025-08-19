@@ -11,6 +11,13 @@ public class KitchenGameMultiplayer : NetworkBehaviour {
      }
 
      private void SpawnKitchenObjectLogic(KitchenObjectSO kitchenObjectSo, IKitchenObjectParent kitchenObjectParent) {
+          // TODO: small visual bug when a player spams picking up an object at
+          // a container counter that causes the animation to be replayed
+          if (kitchenObjectParent.HasKitchenObject()) {
+               // Parent already spawned an object
+               return;
+          }
+
           Transform kitchenObjectTransform = Instantiate(kitchenObjectSo.prefab);
           NetworkObject kitchenObjectNetworkObject = kitchenObjectTransform.GetComponent<NetworkObject>();
           ServerManager.Spawn(kitchenObjectNetworkObject);
@@ -33,6 +40,7 @@ public class KitchenGameMultiplayer : NetworkBehaviour {
           KitchenObjectSO kitchenObjectSo = GetKitchenObjectSOFromIndex(kitchenObjectSoIndex);
           IKitchenObjectParent kitchenObjectParent =
                kitchenObjectParentNetworkObject.GetComponent<IKitchenObjectParent>();
+
           SpawnKitchenObjectLogic(kitchenObjectSo, kitchenObjectParent);
      }
 
@@ -56,6 +64,11 @@ public class KitchenGameMultiplayer : NetworkBehaviour {
 
      [ServerRpc(RequireOwnership = false)]
      private void DestroyKitchenObjectServerRpc(NetworkObject kitchenNetworkObject) {
+          if (kitchenNetworkObject == null) {
+               // This object is already destroyed
+               return;
+          }
+
           KitchenObject kitchenObject = kitchenNetworkObject.GetComponent<KitchenObject>();
 
           ClearKitchenObjectOnParentClientRpc(kitchenNetworkObject);

@@ -13,6 +13,9 @@ public class TrashCounter : BaseCounter {
     public override void Interact(Player player) {
         if (player.HasKitchenObject()) {
             
+            // TODO: small visual bug where if the player trashes an object
+            // twice in quick succession, the animation will play twice because
+            // the destroy RPC hasn't registered on the client yet.
             KitchenObject.DestroyKitchenObject(player.GetKitchenObject());
             InteractLogicServerRpc();
         }
