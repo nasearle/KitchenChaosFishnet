@@ -8,9 +8,10 @@ using FishNet.Object;
 using FishNet.Transporting;
 using FishNet.Object.Synchronizing;
 using System.Collections.Generic;
+using Unity.Services.Authentication;
 
 public class NetworkConnections : NetworkBehaviour {
-    private const int MAX_PLAYER_AMOUNT = 4;
+    public const int MAX_PLAYER_AMOUNT = 2;
     
     public static NetworkConnections Instance { get; private set; }
 
@@ -32,12 +33,36 @@ public class NetworkConnections : NetworkBehaviour {
 
     public override void OnStartNetwork() {
         if (!IsServerStarted) {
-            ClientLoadedManagerScripts();
+            SetPlayerNameServerRpc(KitchenGameLobby.Instance.GetPlayerName());
+            SetPlayerIdServerRpc(AuthenticationService.Instance.PlayerId);
+            ClientLoadedManagerScriptsServerRpc();
         }
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void ClientLoadedManagerScripts(NetworkConnection conn = null) {
+    private void SetPlayerNameServerRpc(string playerName, NetworkConnection conn = null) {
+        int playerDataIndex = GetPlayerDataIndexFromClientId(conn.ClientId);
+
+        PlayerData playerData = _playerDataSyncList[playerDataIndex];
+
+        playerData.playerName = playerName;
+
+        _playerDataSyncList[playerDataIndex] = playerData;
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void SetPlayerIdServerRpc(string playerId, NetworkConnection conn = null) {
+        int playerDataIndex = GetPlayerDataIndexFromClientId(conn.ClientId);
+
+        PlayerData playerData = _playerDataSyncList[playerDataIndex];
+
+        playerData.playerId = playerId;
+
+        _playerDataSyncList[playerDataIndex] = playerData;
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void ClientLoadedManagerScriptsServerRpc(NetworkConnection conn = null) {
         Loader.LoadSingleClientNetwork(Loader.Scene.CharacterSelectScene, conn);
     }
 
@@ -146,6 +171,15 @@ public class NetworkConnections : NetworkBehaviour {
             }
         }
         return -1;
+    }
+
+    public void KickPlayer(int clientId) {
+        KickPlayerServerRpc(clientId);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void KickPlayerServerRpc(int clientId) {
+        _networkManager.ServerManager.Kick(clientId, KickReason.Unset);
     }
 
     private void OnDestroy() {

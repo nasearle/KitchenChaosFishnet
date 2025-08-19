@@ -14,5 +14,9 @@ public class MainMenuCleanUp : MonoBehaviour {
         if (NetworkConnections.Instance != null) {
             Destroy(NetworkConnections.Instance.gameObject);
         }
+
+        if (KitchenGameLobby.Instance != null) {
+            Destroy(KitchenGameLobby.Instance.gameObject);
+        }
     }
 }

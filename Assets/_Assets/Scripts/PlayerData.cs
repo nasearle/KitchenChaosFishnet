@@ -4,5 +4,7 @@ using UnityEngine;
 public struct PlayerData {
     public int clientId;
     public int colorId;
+    public string playerName;
+    public string playerId;
 
 }
