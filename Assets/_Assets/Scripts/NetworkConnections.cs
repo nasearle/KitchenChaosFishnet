@@ -11,7 +11,7 @@ using System.Collections.Generic;
 using Unity.Services.Authentication;
 
 public class NetworkConnections : NetworkBehaviour {
-    public const int MAX_PLAYER_AMOUNT = 2;
+    public const int MAX_PLAYER_AMOUNT = 4;
     
     public static NetworkConnections Instance { get; private set; }
 
@@ -37,6 +37,11 @@ public class NetworkConnections : NetworkBehaviour {
             SetPlayerIdServerRpc(AuthenticationService.Instance.PlayerId);
             ClientLoadedManagerScriptsServerRpc();
         }
+
+        // if (IsServerStarted) {
+            // Get the player data from the lobby and set the _playerDataSyncList
+            // Delete the lobby
+        // }
     }
 
     [ServerRpc(RequireOwnership = false)]
