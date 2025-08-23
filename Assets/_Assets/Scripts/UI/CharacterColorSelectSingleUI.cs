@@ -1,4 +1,5 @@
 using System;
+using Unity.Services.Lobbies.Models;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,32 +8,38 @@ public class CharacterColorSelectSingleUI : MonoBehaviour {
     [SerializeField] private Image image;
     [SerializeField] private GameObject selectedGameObject;
 
-    void Awake() {
-        GetComponent<Button>().onClick.AddListener(() => {
-            NetworkConnections.Instance.ChangePlayerColor(colorId);
+    void Start() {
+        GetComponent<Button>().onClick.AddListener(async () => {
+            await KitchenGameLobby.Instance.SetLobbyPlayerColor(colorId);
         });
+
+        KitchenGameLobby.Instance.OnLobbyJoined += KitchenGameLobbyOnLobbyJoined;
+        KitchenGameLobby.Instance.OnJoinedLobbyDataUpdated += KitchenGameLobbyOnJoinedLobbyDataUpdated;
+        image.color = KitchenGameLobby.Instance.GetPlayerColor(colorId);
     }
 
-    void Start() {
-        NetworkConnections.Instance.OnPlayerDataSyncListChanged += NetworkConnectionOnPlayerDataSyncListChanged;
-        image.color = NetworkConnections.Instance.GetPlayerColor(colorId);
-
+    private void KitchenGameLobbyOnLobbyJoined(object sender, EventArgs e) {
         UpdateIsSelected();
     }
 
-    private void NetworkConnectionOnPlayerDataSyncListChanged(object sender, EventArgs e) {
+    private void KitchenGameLobbyOnJoinedLobbyDataUpdated(object sender, EventArgs e) {
         UpdateIsSelected();
     }
 
     private void UpdateIsSelected() {
-        if (NetworkConnections.Instance.GetPlayerData().colorId == colorId) {
-            selectedGameObject.SetActive(true);
-        } else {
-            selectedGameObject.SetActive(false);
+        Lobby joinedLobby = KitchenGameLobby.Instance.GetLobby();
+        if (joinedLobby != null) {
+            Unity.Services.Lobbies.Models.Player playerData = KitchenGameLobby.Instance.GetPlayerData();
+            if (LobbyPlayerDataConverter.GetPlayerDataValue<int>(playerData, "colorId") == colorId) {
+                selectedGameObject.SetActive(true);
+            } else {
+                selectedGameObject.SetActive(false);
+            }
         }
     }
 
     private void OnDestroy() {
-        NetworkConnections.Instance.OnPlayerDataSyncListChanged -= NetworkConnectionOnPlayerDataSyncListChanged;
+        KitchenGameLobby.Instance.OnLobbyJoined -= KitchenGameLobbyOnLobbyJoined;
+        KitchenGameLobby.Instance.OnJoinedLobbyDataUpdated -= KitchenGameLobbyOnJoinedLobbyDataUpdated;
     }
 }

@@ -23,9 +23,6 @@ public class CharacterSelectUI : MonoBehaviour {
                 _networkManager.ClientManager.StopConnection();
                 Loader.Load(Loader.Scene.MainMenuScene);
             }));
-            readyButton.onClick.AddListener((() => {
-                CharacterSelectReady.Instance.SetPlayerReady();
-            }));
         }
     }
 

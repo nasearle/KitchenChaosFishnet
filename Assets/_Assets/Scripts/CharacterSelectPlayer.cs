@@ -1,53 +1,133 @@
 using System;
 using TMPro;
+using Unity.Services.Lobbies.Models;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class CharacterSelectPlayer : MonoBehaviour {
     [SerializeField] private int playerIndex;
-    [SerializeField] private GameObject readyGameObject;
     [SerializeField] private PlayerVisual playerVisual;
     [SerializeField] private Button kickButton;
+    [SerializeField] private Button leaveButton;
+    [SerializeField] private Button makeHostButton;
+    [SerializeField] private Image isHostImage;
     [SerializeField] private TextMeshPro playerNameText;
 
-    void Awake() {
-        kickButton.onClick.AddListener(() => {
-            PlayerData playerData = NetworkConnections.Instance.GetPlayerDataFromPlayerIndex(playerIndex);
-            KitchenGameLobby.Instance.KickPlayer(playerData.playerId);
-            NetworkConnections.Instance.KickPlayer(playerData.clientId);
-        });
-    }
-
     private void Start() {
-        NetworkConnections.Instance.OnPlayerDataSyncListChanged += NetworkConnectionsOnPlayerDataSyncListChanged;
-        CharacterSelectReady.Instance.OnReadyChanged += CharacterSelectReadyOnReadyChanged;
+        KitchenGameLobby.Instance.OnLobbyJoined += KitchenGameLobbyOnLobbyJoined;
+        KitchenGameLobby.Instance.OnJoinedLobbyDataUpdated += KitchenGameLobbyOnJoinedLobbyDataUpdated;
+        KitchenGameLobby.Instance.OnLobbyPlayerStatusChanged += KitchenGameLobbyOnLobbyPlayerStatusChanged;
 
-        kickButton.gameObject.SetActive(KitchenGameLobby.Instance.IsLobbyHost());
+        kickButton.onClick.AddListener(() => {
+            Unity.Services.Lobbies.Models.Player playerData = KitchenGameLobby.Instance.GetPlayerDataFromPlayerIndex(playerIndex);
+            KitchenGameLobby.Instance.KickPlayer(playerData.Id);
+        });
 
+        leaveButton.onClick.AddListener(async () => {
+            await KitchenGameLobby.Instance.LeaveLobby();
+            await KitchenGameLobby.Instance.CreateLobby("LobbyName", true);
+        });
+
+        makeHostButton.onClick.AddListener(async () => {
+            Unity.Services.Lobbies.Models.Player playerData = KitchenGameLobby.Instance.GetPlayerDataFromPlayerIndex(playerIndex);
+            // Make this player the host
+            await KitchenGameLobby.Instance.SetLobbyHost(playerData.Id);
+        });
+
+        Hide();
+    }
+
+    private void KitchenGameLobbyOnLobbyPlayerStatusChanged(object sender, EventArgs e) {
+        UpdatePlayerUI();
+    }
+
+    private void KitchenGameLobbyOnLobbyJoined(object sender, EventArgs e) {
+        UpdatePlayerUI();
         UpdatePlayer();
     }
 
-    private void CharacterSelectReadyOnReadyChanged(object sender, EventArgs e) {
+    private void KitchenGameLobbyOnJoinedLobbyDataUpdated(object sender, EventArgs e) {
         UpdatePlayer();
     }
 
-    private void NetworkConnectionsOnPlayerDataSyncListChanged(object sender, EventArgs e) {
-        UpdatePlayer();
+    private void UpdatePlayerUI() {
+        Lobby joinedLobby = KitchenGameLobby.Instance.GetLobby();
+        if (joinedLobby == null) {
+            return;
+        }
+
+        if (KitchenGameLobby.Instance.GetLobby().Players.Count > 1 && KitchenGameLobby.Instance.IsPlayerIndexConnected(playerIndex)) {
+            // enable UI
+            Unity.Services.Lobbies.Models.Player playerData = KitchenGameLobby.Instance.GetPlayerDataFromPlayerIndex(playerIndex);
+            
+            if (KitchenGameLobby.Instance.IsLocalPlayerLobbyHost()) {
+                // The local player is the lobby host
+                if (KitchenGameLobby.Instance.LobbyPlayerIsLocalPlayer(playerData)) {
+                    // This player avatar is the local player, so
+                    // enable the host image and disable the makeHostButton
+                    isHostImage.gameObject.SetActive(true);
+                    makeHostButton.gameObject.SetActive(false);
+                } else {
+                    // This player avatar is not the local host player, so
+                    // enable the makeHostButton and disable the host image
+                    isHostImage.gameObject.SetActive(false);
+                    makeHostButton.gameObject.SetActive(true);
+                }
+            } else {
+                // The local player is not the lobby host
+                if (KitchenGameLobby.Instance.IsPlayerLobbyHost(playerData)) {
+                    // This is the player avatar for the lobby host, so
+                    // enable the host image
+                    isHostImage.gameObject.SetActive(true);
+                } else {
+                    // This is not the player avatar for the lobby host, so
+                    // disable the host image
+                    isHostImage.gameObject.SetActive(false);
+                }
+                // Can't make other players the host if this player not the host
+                makeHostButton.gameObject.SetActive(false);
+            }
+            
+            
+            if (KitchenGameLobby.Instance.LobbyPlayerIsLocalPlayer(playerData)) {
+                kickButton.gameObject.SetActive(false);
+                leaveButton.gameObject.SetActive(true);
+            } else if (KitchenGameLobby.Instance.IsLocalPlayerLobbyHost()) {
+                kickButton.gameObject.SetActive(true);
+                leaveButton.gameObject.SetActive(false);
+            } else {
+                kickButton.gameObject.SetActive(false);
+                leaveButton.gameObject.SetActive(false);
+            }
+        } else {
+            // disable UI
+            makeHostButton.gameObject.SetActive(false);
+            isHostImage.gameObject.SetActive(false);
+            kickButton.gameObject.SetActive(false);
+            leaveButton.gameObject.SetActive(false);
+        }
     }
 
     private void UpdatePlayer() {
-        if (NetworkConnections.Instance.IsPlayerIndexConnected(playerIndex)) {
+        Lobby joinedLobby = KitchenGameLobby.Instance.GetLobby();
+        if (joinedLobby == null) {
+            return;
+        }
+
+        if (KitchenGameLobby.Instance.IsPlayerIndexConnected(playerIndex)) {
             Show();
 
-            PlayerData playerData = NetworkConnections.Instance.GetPlayerDataFromPlayerIndex(playerIndex);
-            readyGameObject.SetActive(CharacterSelectReady.Instance.IsPlayerReady(playerData.clientId));
+            Unity.Services.Lobbies.Models.Player playerData = KitchenGameLobby.Instance.GetPlayerDataFromPlayerIndex(playerIndex);
 
-            playerNameText.text = playerData.playerName;
+            playerNameText.text = LobbyPlayerDataConverter.GetPlayerDataValue(playerData, "playerName");
 
-            playerVisual.SetPlayerColor(NetworkConnections.Instance.GetPlayerColor(playerData.colorId));
+            int colorId = LobbyPlayerDataConverter.GetPlayerDataValue<int>(playerData, "colorId");
+
+            playerVisual.SetPlayerColor(KitchenGameLobby.Instance.GetPlayerColor(colorId));
         } else {
             Hide();
         }
+        
     }
 
     public void Show() {
@@ -59,6 +139,8 @@ public class CharacterSelectPlayer : MonoBehaviour {
     }
 
     private void OnDestroy() {
-        NetworkConnections.Instance.OnPlayerDataSyncListChanged -= NetworkConnectionsOnPlayerDataSyncListChanged;
+        KitchenGameLobby.Instance.OnLobbyJoined -= KitchenGameLobbyOnLobbyJoined;
+        KitchenGameLobby.Instance.OnJoinedLobbyDataUpdated -= KitchenGameLobbyOnJoinedLobbyDataUpdated;
+        KitchenGameLobby.Instance.OnLobbyPlayerStatusChanged -= KitchenGameLobbyOnLobbyPlayerStatusChanged;
     }
 }

@@ -8,65 +8,40 @@ using UnityEngine.UI;
 public class LobbyUI : MonoBehaviour {
     
     [SerializeField] private Button mainMenuButton;
-    [SerializeField] private Button createLobbyButton;
-    [SerializeField] private Button quickJoinButton;
     [SerializeField] private Button joinCodeButton;
     [SerializeField] private TMP_InputField joinCodeInputField;
     [SerializeField] private TMP_InputField playerNameInputField;
     [SerializeField] private LobbyCreateUI lobbyCreateUI;
-    [SerializeField] private Transform lobbyContainer;
-    [SerializeField] private Transform lobbyTemplate;
-    
-    private void Awake() {
-        mainMenuButton.onClick.AddListener(() => {
-            KitchenGameLobby.Instance.LeaveLobby();
+    [SerializeField] private TextMeshProUGUI lobbyCodeText;
+
+    private void Start() {
+        mainMenuButton.onClick.AddListener(async () => {
+            await KitchenGameLobby.Instance.LeaveLobby();
             Loader.Load(Loader.Scene.MainMenuScene);
         });
 
-        createLobbyButton.onClick.AddListener(() => {
-            lobbyCreateUI.Show();
+        joinCodeButton.onClick.AddListener(async () => {
+            await KitchenGameLobby.Instance.JoinWithCode(joinCodeInputField.text);
         });
 
-        quickJoinButton.onClick.AddListener(() => {
-            KitchenGameLobby.Instance.QuickJoin();
-        });
+        KitchenGameLobby.Instance.OnLobbyJoined += KitchenGameLobbyOnLobbyJoined;
 
-        joinCodeButton.onClick.AddListener(() => {
-            KitchenGameLobby.Instance.JoinWithCode(joinCodeInputField.text);
-        });
-
-        lobbyTemplate.gameObject.SetActive(false);
-    }
-
-    void Start() {
         playerNameInputField.text = KitchenGameLobby.Instance.GetPlayerName();
-        playerNameInputField.onValueChanged.AddListener((string newText) => {
-            KitchenGameLobby.Instance.SetPlayerName(newText);
+        playerNameInputField.onDeselect.AddListener(async (string newText) => {
+            string currentName = KitchenGameLobby.Instance.GetPlayerName();
+            
+            if (newText != currentName) {
+                await KitchenGameLobby.Instance.SetPlayerName(newText);
+            }
         });
-
-        KitchenGameLobby.Instance.OnLobbyListChanged += KitchenGameLobbyOnLobbyListChanged;
-
-        UpdateLobbyList(new List<Lobby>());
     }
 
-    private void KitchenGameLobbyOnLobbyListChanged(object sender, KitchenGameLobby.OnLobbyListChangedEventArgs e) {
-        UpdateLobbyList(e.lobbyList);
-    }
-
-    private void UpdateLobbyList(List<Lobby> lobbyList) {
-        foreach (Transform child in lobbyContainer) {
-            if (child == lobbyTemplate) continue;
-            Destroy(child.gameObject);
-        }
-
-        foreach (Lobby lobby in lobbyList) {
-            Transform lobbyTransform = Instantiate(lobbyTemplate, lobbyContainer);
-            lobbyTransform.gameObject.SetActive(true);
-            lobbyTransform.GetComponent<LobbyListSingleUI>().SetLobby(lobby);
-        }
+    private void KitchenGameLobbyOnLobbyJoined(object sender, EventArgs e) {
+        Lobby joinedLobby = KitchenGameLobby.Instance.GetLobby();
+        lobbyCodeText.text = "Lobby Code: " + joinedLobby.LobbyCode;
     }
 
     private void OnDestroy() {
-        KitchenGameLobby.Instance.OnLobbyListChanged -= KitchenGameLobbyOnLobbyListChanged;
+        KitchenGameLobby.Instance.OnLobbyJoined -= KitchenGameLobbyOnLobbyJoined;
     }
 }

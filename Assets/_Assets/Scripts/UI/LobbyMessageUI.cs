@@ -17,7 +17,6 @@ public class LobbyMessageUI : MonoBehaviour {
         KitchenGameLobby.Instance.OnCreateLobbyFailed += KitchenGameLobbyOnCreateLobbyFailed;
         KitchenGameLobby.Instance.OnJoinStarted += KitchenGameLobbyOnJoinStarted;
         KitchenGameLobby.Instance.OnJoinFailed += KitchenGameLobbyOnJoinFailed;
-        KitchenGameLobby.Instance.OnQuickJoinFailed += KitchenGameLobbyOnQuickJoinFailed;
         
         Hide();
     }
@@ -67,6 +66,5 @@ public class LobbyMessageUI : MonoBehaviour {
         KitchenGameLobby.Instance.OnCreateLobbyFailed -= KitchenGameLobbyOnCreateLobbyFailed;
         KitchenGameLobby.Instance.OnJoinStarted -= KitchenGameLobbyOnJoinStarted;
         KitchenGameLobby.Instance.OnJoinFailed -= KitchenGameLobbyOnJoinFailed;
-        KitchenGameLobby.Instance.OnQuickJoinFailed -= KitchenGameLobbyOnQuickJoinFailed;
     }
 }

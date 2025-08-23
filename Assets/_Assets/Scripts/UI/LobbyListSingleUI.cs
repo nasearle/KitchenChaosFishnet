@@ -8,9 +8,9 @@ public class LobbyListSingleUI : MonoBehaviour {
     private Lobby _lobby;
 
     void Awake() {
-        GetComponent<Button>().onClick.AddListener(() => {
-            KitchenGameLobby.Instance.JoinWithId(_lobby.Id);
-        });
+        // GetComponent<Button>().onClick.AddListener(() => {
+        //     KitchenGameLobby.Instance.JoinWithId(_lobby.Id);
+        // });
     }
 
     public void SetLobby(Lobby lobby) {
