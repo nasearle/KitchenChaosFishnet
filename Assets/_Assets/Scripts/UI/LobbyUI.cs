@@ -8,6 +8,7 @@ using UnityEngine.UI;
 public class LobbyUI : MonoBehaviour {
     
     [SerializeField] private Button mainMenuButton;
+    [SerializeField] private Button createLobbyButton;
     [SerializeField] private Button joinCodeButton;
     [SerializeField] private TMP_InputField joinCodeInputField;
     [SerializeField] private TMP_InputField playerNameInputField;
@@ -20,11 +21,16 @@ public class LobbyUI : MonoBehaviour {
             Loader.Load(Loader.Scene.MainMenuScene);
         });
 
+        createLobbyButton.onClick.AddListener(async () => {
+            await KitchenGameLobby.Instance.CreateLobby("LobbyName", true);
+        });
+
         joinCodeButton.onClick.AddListener(async () => {
             await KitchenGameLobby.Instance.JoinWithCode(joinCodeInputField.text);
         });
 
         KitchenGameLobby.Instance.OnLobbyJoined += KitchenGameLobbyOnLobbyJoined;
+        KitchenGameLobby.Instance.OnLobbyLeft += KitchenGameLobbyOnLobbyLeft;
 
         playerNameInputField.text = KitchenGameLobby.Instance.GetPlayerName();
         playerNameInputField.onDeselect.AddListener(async (string newText) => {
@@ -36,6 +42,10 @@ public class LobbyUI : MonoBehaviour {
         });
     }
 
+    private void KitchenGameLobbyOnLobbyLeft(object sender, EventArgs e) {
+        lobbyCodeText.text = "Lobby Code: ";
+    }
+
     private void KitchenGameLobbyOnLobbyJoined(object sender, EventArgs e) {
         Lobby joinedLobby = KitchenGameLobby.Instance.GetLobby();
         lobbyCodeText.text = "Lobby Code: " + joinedLobby.LobbyCode;
@@ -43,5 +53,6 @@ public class LobbyUI : MonoBehaviour {
 
     private void OnDestroy() {
         KitchenGameLobby.Instance.OnLobbyJoined -= KitchenGameLobbyOnLobbyJoined;
+        KitchenGameLobby.Instance.OnLobbyLeft -= KitchenGameLobbyOnLobbyLeft;
     }
 }

@@ -23,9 +23,11 @@ public class KitchenGameLobby : MonoBehaviour {
     public event EventHandler OnCreateLobbyStarted;
     public event EventHandler OnCreateLobbyFailed;
     public event EventHandler OnLobbyJoined;
+    public event EventHandler OnLobbyLeft;
     public event EventHandler OnJoinStarted;
     public event EventHandler OnJoinFailed;
     public event EventHandler OnJoinedLobbyDataUpdated;
+    public event EventHandler OnPlayerDataUpdated;
     public event EventHandler OnLobbyPlayerStatusChanged;
     public event EventHandler<OnLobbyListChangedEventArgs> OnLobbyListChanged;
     public class OnLobbyListChangedEventArgs : EventArgs {
@@ -39,9 +41,8 @@ public class KitchenGameLobby : MonoBehaviour {
     private Lobby _joinedLobby;
     private ILobbyEvents _lobbyEvents;
     private float _heartbeatTimer;
-    private float _listLobbiesTimer;
-    private float _updateJoinedLobbyDataTimer;
-    private string _playerName;
+    private PlayerData _playerData;
+    private LobbyEventCallbacks _lobbyEventCallbacks;
 
     void Awake() {
         Instance = this;
@@ -52,21 +53,45 @@ public class KitchenGameLobby : MonoBehaviour {
 
         _networkManager.ServerManager.OnServerConnectionState += ServerManagerOnServerConnectionState;
 
-        _playerName = PlayerPrefs.GetString(PLAYER_PREFS_PLAYER_NAME, "PlayerName" + UnityEngine.Random.Range(100, 1000));
+        _playerData = new PlayerData();
+
+        _playerData.playerName = PlayerPrefs.GetString(PLAYER_PREFS_PLAYER_NAME, "PlayerName" + UnityEngine.Random.Range(100, 1000));
 
         InitializeUnityAuthentication();
     }
 
+    public PlayerData GetPlayerData() {
+        return _playerData;
+    }
+
     public string GetPlayerName() {
-        return _playerName;
+        return _playerData.playerName;
     }
 
     public async Task SetPlayerName(string playerName) {
-        _playerName = playerName;
+        _playerData.playerName = playerName;
 
         PlayerPrefs.SetString(PLAYER_PREFS_PLAYER_NAME, playerName);
 
+        OnPlayerDataUpdated?.Invoke(this, EventArgs.Empty);
+
         await SetLobbyPlayerName(playerName);
+    }
+
+    public int GetPlayerColor() {
+        return _playerData.colorId;
+    }
+
+    public async Task SetPlayerColor(int colorId) {
+        if (!IsColorAvailable(colorId)) {
+            return;
+        }
+
+        _playerData.colorId = colorId;
+
+        OnPlayerDataUpdated?.Invoke(this, EventArgs.Empty);
+
+        await SetLobbyPlayerColor(colorId);
     }
 
     private void ServerManagerOnServerConnectionState(ServerConnectionStateArgs stateArgs) {
@@ -102,40 +127,11 @@ public class KitchenGameLobby : MonoBehaviour {
                 _networkManager.ServerManager.StartConnection();
             }
         }
-
-        if (!dedicatedServer) {
-            if (_joinedLobby == null) {
-                CreateLobby("LobbyName", true);
-            }
-        }
     }
 
     void Update() {
         HandleHeartbeat();
-        // HandlePeriodicListLobbies();
-        // HandlePeriodicUpdateJoinedLobbyData();
     }
-
-    // private async void HandlePeriodicUpdateJoinedLobbyData() {
-    //     if (joinedLobby != null &&
-    //         AuthenticationService.Instance.IsSignedIn &&
-    //         SceneManager.GetActiveScene().name == Loader.Scene.LobbyScene.ToString()) {
-            
-    //         _updateJoinedLobbyDataTimer -= Time.deltaTime;
-    //         if (_updateJoinedLobbyDataTimer <= 0f) {
-    //             float updateJoinedLobbyDataTimerMax = 3f;
-    //             _updateJoinedLobbyDataTimer = updateJoinedLobbyDataTimerMax;
-
-    //             try {
-    //                 joinedLobby = await LobbyService.Instance.GetLobbyAsync(joinedLobby.Id);
-
-    //                 OnJoinedLobbyDataUpdated?.Invoke(this, EventArgs.Empty);
-    //             } catch (LobbyServiceException e) {
-    //                 Debug.Log(e);
-    //             }
-    //         }
-    //     }
-    // }
 
     private void HandleHeartbeat() {
         if (IsLocalPlayerLobbyHost()) {
@@ -181,12 +177,13 @@ public class KitchenGameLobby : MonoBehaviour {
     }
 
     private async Task SubscribeToLobbyEvents() {
-        var callbacks = new LobbyEventCallbacks();
-        callbacks.LobbyChanged += OnLobbyChanged;
-        callbacks.KickedFromLobby += OnKickedFromLobby;
+        Debug.Log("SubscribeToLobbyEvents");
+        _lobbyEventCallbacks = new LobbyEventCallbacks();
+        _lobbyEventCallbacks.LobbyChanged += OnLobbyChanged;
+        _lobbyEventCallbacks.KickedFromLobby += OnKickedFromLobby;
 
         try {
-            _lobbyEvents = await LobbyService.Instance.SubscribeToLobbyEventsAsync(_joinedLobby.Id, callbacks);
+            _lobbyEvents = await LobbyService.Instance.SubscribeToLobbyEventsAsync(_joinedLobby.Id, _lobbyEventCallbacks);
         }
         catch (LobbyServiceException ex)
         {
@@ -200,6 +197,8 @@ public class KitchenGameLobby : MonoBehaviour {
     }
 
     private async Task UnsubscribeFromLobbyEvents() {
+        _lobbyEventCallbacks.LobbyChanged -= OnLobbyChanged;
+        _lobbyEventCallbacks.KickedFromLobby -= OnKickedFromLobby;
         if (_lobbyEvents != null) {
             try {
                 await _lobbyEvents.UnsubscribeAsync();
@@ -213,8 +212,10 @@ public class KitchenGameLobby : MonoBehaviour {
     private void OnKickedFromLobby() {
         _lobbyEvents = null;
         _joinedLobby = null;
-        // Automatically create a new lobby
-        CreateLobby("LobbyName", true);
+
+        UnsubscribeFromLobbyEvents();
+
+        OnLobbyLeft?.Invoke(this, EventArgs.Empty);
     }
 
     private void OnLobbyChanged(ILobbyChanges changes) {
@@ -222,6 +223,10 @@ public class KitchenGameLobby : MonoBehaviour {
             // Handle lobby being deleted
             // Calling changes.ApplyToLobby will log a warning and do nothing
         } else {
+            if (_joinedLobby == null) {
+                return;
+            }
+
             changes.ApplyToLobby(_joinedLobby);
 
             OnJoinedLobbyDataUpdated?.Invoke(this, EventArgs.Empty);
@@ -242,7 +247,7 @@ public class KitchenGameLobby : MonoBehaviour {
             options.Player = new Unity.Services.Lobbies.Models.Player(
                 id: AuthenticationService.Instance.PlayerId,
                 data: new Dictionary<string, PlayerDataObject> {
-                    {"colorId", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, GetFirstUnusedColorId().ToString())},
+                    {"colorId", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, GetPlayerColor().ToString())},
                     {"playerName", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, GetPlayerName())}
             });
             _joinedLobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, MAX_PLAYER_AMOUNT, options);
@@ -258,6 +263,10 @@ public class KitchenGameLobby : MonoBehaviour {
 
     public async Task JoinWithCode(string lobbyCode) {
         if (_joinedLobby != null) {
+            if (_joinedLobby.LobbyCode == lobbyCode.ToUpper()) {
+                // Already in the lobby we are trying to join!
+                return;
+            }
             await LeaveLobby();
         }
 
@@ -267,15 +276,17 @@ public class KitchenGameLobby : MonoBehaviour {
             options.Player = new Unity.Services.Lobbies.Models.Player(
                 id: AuthenticationService.Instance.PlayerId,
                 data: new Dictionary<string, PlayerDataObject> {
-                    // {"colorId", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, GetFirstUnusedColorId().ToString())},
+                    {"colorId", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, GetPlayerColor().ToString())},
                     {"playerName", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, GetPlayerName())}
             });
             _joinedLobby = await LobbyService.Instance.JoinLobbyByCodeAsync(lobbyCode, options);
-            await SetLobbyPlayerColor(GetFirstUnusedColorId());
+            await SubscribeToLobbyEvents();
+
+            if (MoreThanOnePlayerHasColor(GetPlayerColor())) {
+                await SetPlayerColor(GetFirstUnusedColorId());
+            }            
 
             OnLobbyJoined?.Invoke(this, EventArgs.Empty);
-
-            await SubscribeToLobbyEvents();
         } catch (LobbyServiceException e) {
             Debug.Log(e);
             OnJoinFailed?.Invoke(this, EventArgs.Empty);
@@ -302,6 +313,8 @@ public class KitchenGameLobby : MonoBehaviour {
                 await LobbyService.Instance.RemovePlayerAsync(_joinedLobby.Id, AuthenticationService.Instance.PlayerId);
 
                 _joinedLobby = null;
+
+                OnLobbyLeft?.Invoke(this, EventArgs.Empty);
             } catch (LobbyServiceException e) {
                 Debug.Log(e);
             }
@@ -397,12 +410,30 @@ public class KitchenGameLobby : MonoBehaviour {
         return default;
     }
 
-    public Unity.Services.Lobbies.Models.Player GetPlayerData() {
+    public Unity.Services.Lobbies.Models.Player GetLobbyPlayerData() {
         return GetPlayerDataFromPlayerId();
     }
 
-    public Color GetPlayerColor(int colorId) {
+    public Color GetPlayerColorByColorId(int colorId) {
         return playerColorList[colorId];
+    }
+
+    private bool MoreThanOnePlayerHasColor(int colorId) {
+        if (_joinedLobby == null) {
+            return false;
+        }
+
+        int count = 0;
+        foreach (Unity.Services.Lobbies.Models.Player playerData in _joinedLobby.Players) {
+            if (LobbyPlayerDataConverter.GetPlayerDataValue<int>(playerData, "colorId") == colorId) {
+                count++;
+                if (count > 1) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private bool IsColorAvailable(int colorId) {
