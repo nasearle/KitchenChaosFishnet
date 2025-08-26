@@ -68,7 +68,7 @@ public class NetworkConnections : NetworkBehaviour {
 
     [ServerRpc(RequireOwnership = false)]
     private void ClientLoadedManagerScriptsServerRpc(NetworkConnection conn = null) {
-        Loader.LoadSingleClientNetwork(Loader.Scene.CharacterSelectScene, conn);
+        Loader.LoadSingleClientNetwork(Loader.Scene.GameScene, conn);
     }
 
     private void PlayerDataSyncListOnChange(SyncListOperation op, int index, PlayerData oldItem, PlayerData newItem, bool asServer) {

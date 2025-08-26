@@ -66,8 +66,8 @@ public class Player : NetworkBehaviour, IKitchenObjectParent {
         GameInput.Instance.OnInteractAction += GameInputOnInteractAction;
         GameInput.Instance.OnInteractAlternateAction += GameInputOnInteractAlternateAction;
 
-        PlayerData playerData = NetworkConnections.Instance.GetPlayerDataFromClientId(OwnerId);
-        playerVisual.SetPlayerColor(NetworkConnections.Instance.GetPlayerColor(playerData.colorId));
+        // PlayerData playerData = NetworkConnections.Instance.GetPlayerDataFromClientId(OwnerId);
+        // playerVisual.SetPlayerColor(NetworkConnections.Instance.GetPlayerColor(playerData.colorId));
     }
 
     private void GameInputOnInteractAlternateAction(object sender, EventArgs e) {

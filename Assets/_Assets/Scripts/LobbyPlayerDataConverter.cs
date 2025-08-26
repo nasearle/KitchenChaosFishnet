@@ -19,8 +19,8 @@ public static class LobbyPlayerDataConverter
         return new PlayerData
         {
             clientId = clientId,
-            colorId = GetPlayerDataValue<int>(lobbyPlayer, "colorId", 0),
-            playerName = GetPlayerDataValue(lobbyPlayer, "playerName", "Player"),
+            colorId = GetPlayerDataValue<int>(lobbyPlayer, KitchenGameLobby.LobbyDataKeys.ColorId, 0),
+            playerName = GetPlayerDataValue(lobbyPlayer, KitchenGameLobby.LobbyDataKeys.PlayerName, "Player"),
             playerId = lobbyPlayer.Id ?? ""
         };
     }
@@ -40,6 +40,15 @@ public static class LobbyPlayerDataConverter
         if (player?.Data != null && player.Data.ContainsKey(key))
         {
             return player.Data[key].Value;
+        }
+        return defaultValue;
+    }
+
+    public static string GetLobbyDataValue(Lobby lobby, string key, string defaultValue = "")
+    {
+        if (lobby?.Data != null && lobby.Data.ContainsKey(key))
+        {
+            return lobby.Data[key].Value;
         }
         return defaultValue;
     }

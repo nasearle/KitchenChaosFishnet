@@ -4,7 +4,7 @@ using Unity.Services.Lobbies.Models;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class CharacterSelectPlayer : MonoBehaviour {
+public class LobbyPlayer : MonoBehaviour {
     [SerializeField] private int playerIndex;
     [SerializeField] private PlayerVisual playerVisual;
     [SerializeField] private Button kickButton;
@@ -14,14 +14,14 @@ public class CharacterSelectPlayer : MonoBehaviour {
     [SerializeField] private TextMeshPro playerNameText;
 
     private void Start() {
-        KitchenGameLobby.Instance.OnLobbyJoined += KitchenGameLobbyOnLobbyJoined;
-        KitchenGameLobby.Instance.OnJoinedLobbyDataUpdated += KitchenGameLobbyOnJoinedLobbyDataUpdated;
-        KitchenGameLobby.Instance.OnLobbyPlayerStatusChanged += KitchenGameLobbyOnLobbyPlayerStatusChanged;
-        KitchenGameLobby.Instance.OnPlayerDataUpdated += KitchenGameLobbyOnPlayerDataUpdated;
-        KitchenGameLobby.Instance.OnLobbyLeft += KitchenGameLobbyOnLobbyLeft;
+        KitchenGameLobby.Instance.OnLobbyJoinSucceeded += KitchenGameLobbyOnLobbyJoinSucceeded;
+        KitchenGameLobby.Instance.OnJoinedLobbyAnyChange += KitchenGameLobbyOnJoinedLobbyAnyChange;
+        KitchenGameLobby.Instance.OnJoinedLobbyPlayerStatusChanged += KitchenGameLobbyOnJoinedLobbyPlayerStatusChanged;
+        KitchenGameLobby.Instance.OnPlayerDataChanged += KitchenGameLobbyOnPlayerDataChanged;
+        KitchenGameLobby.Instance.OnLobbyLeaveSucceeded += KitchenGameLobbyOnLobbyLeaveSucceeded;
 
         kickButton.onClick.AddListener(() => {
-            Unity.Services.Lobbies.Models.Player playerData = KitchenGameLobby.Instance.GetPlayerDataFromPlayerIndex(playerIndex);
+            Unity.Services.Lobbies.Models.Player playerData = KitchenGameLobby.Instance.GetLobbyPlayerDataFromPlayerIndex(playerIndex);
             KitchenGameLobby.Instance.KickPlayer(playerData.Id);
         });
 
@@ -30,7 +30,7 @@ public class CharacterSelectPlayer : MonoBehaviour {
         });
 
         makeHostButton.onClick.AddListener(async () => {
-            Unity.Services.Lobbies.Models.Player playerData = KitchenGameLobby.Instance.GetPlayerDataFromPlayerIndex(playerIndex);
+            Unity.Services.Lobbies.Models.Player playerData = KitchenGameLobby.Instance.GetLobbyPlayerDataFromPlayerIndex(playerIndex);
             // Make this player the host
             await KitchenGameLobby.Instance.SetLobbyHost(playerData.Id);
         });
@@ -39,12 +39,12 @@ public class CharacterSelectPlayer : MonoBehaviour {
         UpdatePlayer();
     }
 
-    private void KitchenGameLobbyOnLobbyLeft(object sender, EventArgs e) {
+    private void KitchenGameLobbyOnLobbyLeaveSucceeded(object sender, EventArgs e) {
         UpdatePlayerLobbyUI();
         UpdatePlayer();
     }
 
-    private void KitchenGameLobbyOnPlayerDataUpdated(object sender, EventArgs e) {
+    private void KitchenGameLobbyOnPlayerDataChanged(object sender, EventArgs e) {
         Lobby joinedLobby = KitchenGameLobby.Instance.GetLobby();
         if (joinedLobby != null) {
             return;
@@ -53,16 +53,16 @@ public class CharacterSelectPlayer : MonoBehaviour {
         UpdatePlayer();
     }
 
-    private void KitchenGameLobbyOnLobbyPlayerStatusChanged(object sender, EventArgs e) {
+    private void KitchenGameLobbyOnJoinedLobbyPlayerStatusChanged(object sender, EventArgs e) {
         UpdatePlayerLobbyUI();
     }
 
-    private void KitchenGameLobbyOnLobbyJoined(object sender, EventArgs e) {
+    private void KitchenGameLobbyOnLobbyJoinSucceeded(object sender, EventArgs e) {
         UpdatePlayerLobbyUI();
         UpdatePlayer();
     }
 
-    private void KitchenGameLobbyOnJoinedLobbyDataUpdated(object sender, EventArgs e) {
+    private void KitchenGameLobbyOnJoinedLobbyAnyChange(object sender, EventArgs e) {
         UpdatePlayer();
     }
 
@@ -78,7 +78,7 @@ public class CharacterSelectPlayer : MonoBehaviour {
 
         if (KitchenGameLobby.Instance.GetLobby().Players.Count > 1 && KitchenGameLobby.Instance.IsPlayerIndexConnected(playerIndex)) {
             // enable UI
-            Unity.Services.Lobbies.Models.Player playerData = KitchenGameLobby.Instance.GetPlayerDataFromPlayerIndex(playerIndex);
+            Unity.Services.Lobbies.Models.Player playerData = KitchenGameLobby.Instance.GetLobbyPlayerDataFromPlayerIndex(playerIndex);
             
             if (KitchenGameLobby.Instance.IsLocalPlayerLobbyHost()) {
                 // The local player is the lobby host
@@ -134,11 +134,11 @@ public class CharacterSelectPlayer : MonoBehaviour {
             if (KitchenGameLobby.Instance.IsPlayerIndexConnected(playerIndex)) {
                 Show();
 
-                Unity.Services.Lobbies.Models.Player playerData = KitchenGameLobby.Instance.GetPlayerDataFromPlayerIndex(playerIndex);
+                Unity.Services.Lobbies.Models.Player playerData = KitchenGameLobby.Instance.GetLobbyPlayerDataFromPlayerIndex(playerIndex);
 
-                playerNameText.text = LobbyPlayerDataConverter.GetPlayerDataValue(playerData, "playerName");
+                playerNameText.text = LobbyPlayerDataConverter.GetPlayerDataValue(playerData, KitchenGameLobby.LobbyDataKeys.PlayerName);
 
-                int colorId = LobbyPlayerDataConverter.GetPlayerDataValue<int>(playerData, "colorId");
+                int colorId = LobbyPlayerDataConverter.GetPlayerDataValue<int>(playerData, KitchenGameLobby.LobbyDataKeys.ColorId);
 
                 playerVisual.SetPlayerColor(KitchenGameLobby.Instance.GetPlayerColorByColorId(colorId));
             } else {
@@ -168,10 +168,10 @@ public class CharacterSelectPlayer : MonoBehaviour {
     }
 
     private void OnDestroy() {
-        KitchenGameLobby.Instance.OnLobbyJoined -= KitchenGameLobbyOnLobbyJoined;
-        KitchenGameLobby.Instance.OnJoinedLobbyDataUpdated -= KitchenGameLobbyOnJoinedLobbyDataUpdated;
-        KitchenGameLobby.Instance.OnLobbyPlayerStatusChanged -= KitchenGameLobbyOnLobbyPlayerStatusChanged;
-        KitchenGameLobby.Instance.OnPlayerDataUpdated -= KitchenGameLobbyOnPlayerDataUpdated;
-        KitchenGameLobby.Instance.OnLobbyLeft -= KitchenGameLobbyOnLobbyLeft;
+        KitchenGameLobby.Instance.OnLobbyJoinSucceeded -= KitchenGameLobbyOnLobbyJoinSucceeded;
+        KitchenGameLobby.Instance.OnJoinedLobbyAnyChange -= KitchenGameLobbyOnJoinedLobbyAnyChange;
+        KitchenGameLobby.Instance.OnJoinedLobbyPlayerStatusChanged -= KitchenGameLobbyOnJoinedLobbyPlayerStatusChanged;
+        KitchenGameLobby.Instance.OnPlayerDataChanged -= KitchenGameLobbyOnPlayerDataChanged;
+        KitchenGameLobby.Instance.OnLobbyLeaveSucceeded -= KitchenGameLobbyOnLobbyLeaveSucceeded;
     }
 }

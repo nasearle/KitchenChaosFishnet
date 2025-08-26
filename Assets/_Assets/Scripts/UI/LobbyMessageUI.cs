@@ -13,23 +13,38 @@ public class LobbyMessageUI : MonoBehaviour {
 
     private void Start() {
         LobbyPlayerConnection.Instance.OnFailedToJoinGame += LobbyPlayerConnectionOnFailedToJoinGame;
-        KitchenGameLobby.Instance.OnCreateLobbyStarted += KitchenGameLobbyOnCreateLobbyStarted;
-        KitchenGameLobby.Instance.OnCreateLobbyFailed += KitchenGameLobbyOnCreateLobbyFailed;
-        KitchenGameLobby.Instance.OnJoinStarted += KitchenGameLobbyOnJoinStarted;
-        KitchenGameLobby.Instance.OnJoinFailed += KitchenGameLobbyOnJoinFailed;
+        KitchenGameLobby.Instance.OnLobbyCreateStarted += KitchenGameLobbyOnLobbyCreateStarted;
+        KitchenGameLobby.Instance.OnLobbyCreateFailed += KitchenGameLobbyOnLobbyCreateFailed;
+        KitchenGameLobby.Instance.OnLobbyJoinStarted += KitchenGameLobbyOnLobbyJoinStarted;
+        KitchenGameLobby.Instance.OnLobbyJoinFailed += KitchenGameLobbyOnLobbyJoinFailed;
+        KitchenGameLobby.Instance.OnLobbyJoinSucceeded += KitchenGameLobbyOnLobbyJoinSucceeded;
+        KitchenGameLobby.Instance.OnLobbyLeaveStarted += KitchenGameLobbyOnLobbyLeaveStarted;
+        KitchenGameLobby.Instance.OnLobbyLeaveSucceeded += KitchenGameLobbyOnLobbyLeaveSucceeded;
         
         Hide();
     }
 
-    private void KitchenGameLobbyOnCreateLobbyFailed(object sender, EventArgs e) {
+    private void KitchenGameLobbyOnLobbyLeaveSucceeded(object sender, EventArgs e) {
+        Hide();
+    }
+
+    private void KitchenGameLobbyOnLobbyLeaveStarted(object sender, EventArgs e) {
+        ShowMessage("Leaving Lobby...");
+    }
+
+    private void KitchenGameLobbyOnLobbyJoinSucceeded(object sender, EventArgs e) {
+        Hide();
+    }
+
+    private void KitchenGameLobbyOnLobbyCreateFailed(object sender, EventArgs e) {
         ShowMessage("Failed to create Lobby!");
     }
 
-    private void KitchenGameLobbyOnJoinStarted(object sender, EventArgs e) {
+    private void KitchenGameLobbyOnLobbyJoinStarted(object sender, EventArgs e) {
         ShowMessage("Joining Lobby...");
     }
 
-    private void KitchenGameLobbyOnJoinFailed(object sender, EventArgs e) {
+    private void KitchenGameLobbyOnLobbyJoinFailed(object sender, EventArgs e) {
         ShowMessage("Failed to join Lobby!");
     }
 
@@ -37,7 +52,7 @@ public class LobbyMessageUI : MonoBehaviour {
         ShowMessage("Could not find a Lobby to Quick Join!");
     }
 
-    private void KitchenGameLobbyOnCreateLobbyStarted(object sender, EventArgs e) {
+    private void KitchenGameLobbyOnLobbyCreateStarted(object sender, EventArgs e) {
         ShowMessage("Creating Lobby...");
     }
 
@@ -62,9 +77,12 @@ public class LobbyMessageUI : MonoBehaviour {
 
     private void OnDestroy() {
         LobbyPlayerConnection.Instance.OnFailedToJoinGame -= LobbyPlayerConnectionOnFailedToJoinGame;
-        KitchenGameLobby.Instance.OnCreateLobbyStarted -= KitchenGameLobbyOnCreateLobbyStarted;
-        KitchenGameLobby.Instance.OnCreateLobbyFailed -= KitchenGameLobbyOnCreateLobbyFailed;
-        KitchenGameLobby.Instance.OnJoinStarted -= KitchenGameLobbyOnJoinStarted;
-        KitchenGameLobby.Instance.OnJoinFailed -= KitchenGameLobbyOnJoinFailed;
+        KitchenGameLobby.Instance.OnLobbyCreateStarted -= KitchenGameLobbyOnLobbyCreateStarted;
+        KitchenGameLobby.Instance.OnLobbyCreateFailed -= KitchenGameLobbyOnLobbyCreateFailed;
+        KitchenGameLobby.Instance.OnLobbyJoinStarted -= KitchenGameLobbyOnLobbyJoinStarted;
+        KitchenGameLobby.Instance.OnLobbyJoinFailed -= KitchenGameLobbyOnLobbyJoinFailed;
+        KitchenGameLobby.Instance.OnLobbyJoinSucceeded -= KitchenGameLobbyOnLobbyJoinSucceeded;
+        KitchenGameLobby.Instance.OnLobbyLeaveStarted -= KitchenGameLobbyOnLobbyLeaveStarted;
+        KitchenGameLobby.Instance.OnLobbyLeaveSucceeded -= KitchenGameLobbyOnLobbyLeaveSucceeded;
     }
 }

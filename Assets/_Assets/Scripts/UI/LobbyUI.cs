@@ -10,10 +10,12 @@ public class LobbyUI : MonoBehaviour {
     [SerializeField] private Button mainMenuButton;
     [SerializeField] private Button createLobbyButton;
     [SerializeField] private Button joinCodeButton;
+    [SerializeField] private Button findMatchButton;
+    [SerializeField] private Button testMatchFoundButton;
     [SerializeField] private TMP_InputField joinCodeInputField;
     [SerializeField] private TMP_InputField playerNameInputField;
-    [SerializeField] private LobbyCreateUI lobbyCreateUI;
     [SerializeField] private TextMeshProUGUI lobbyCodeText;
+    [SerializeField] private TextMeshProUGUI findMatchButtonText;
 
     private void Start() {
         mainMenuButton.onClick.AddListener(async () => {
@@ -29,8 +31,18 @@ public class LobbyUI : MonoBehaviour {
             await KitchenGameLobby.Instance.JoinWithCode(joinCodeInputField.text);
         });
 
-        KitchenGameLobby.Instance.OnLobbyJoined += KitchenGameLobbyOnLobbyJoined;
-        KitchenGameLobby.Instance.OnLobbyLeft += KitchenGameLobbyOnLobbyLeft;
+        findMatchButton.onClick.AddListener(async () => {
+            UpdateFindMatchUI();
+            await KitchenGameLobby.Instance.SetPlayerMatchmakingStatus(KitchenGameLobby.MatchmakingStatus.Searching);
+        });
+
+        testMatchFoundButton.onClick.AddListener(() => {
+            KitchenGameLobby.Instance.OnMatchFound();
+        });
+
+        KitchenGameLobby.Instance.OnLobbyJoinSucceeded += KitchenGameLobbyOnLobbyJoinSucceeded;
+        KitchenGameLobby.Instance.OnLobbyLeaveSucceeded += KitchenGameLobbyOnLobbyLeaveSucceeded;
+        KitchenGameLobby.Instance.OnJoinedLobbyTopLevelDataChange += KitchenGameLobbyOnJoinedLobbyTopLevelDataChange;
 
         playerNameInputField.text = KitchenGameLobby.Instance.GetPlayerName();
         playerNameInputField.onDeselect.AddListener(async (string newText) => {
@@ -42,17 +54,42 @@ public class LobbyUI : MonoBehaviour {
         });
     }
 
-    private void KitchenGameLobbyOnLobbyLeft(object sender, EventArgs e) {
+    private void KitchenGameLobbyOnJoinedLobbyTopLevelDataChange(object sender, EventArgs e) {
+        UpdateFindMatchUI();
+    }
+
+    private void KitchenGameLobbyOnLobbyLeaveSucceeded(object sender, EventArgs e) {
         lobbyCodeText.text = "Lobby Code: ";
     }
 
-    private void KitchenGameLobbyOnLobbyJoined(object sender, EventArgs e) {
+    private void UpdateFindMatchUI() {
+        Lobby joinedLobby = KitchenGameLobby.Instance.GetLobby();
+
+        if (joinedLobby != null) {
+            if (LobbyPlayerDataConverter.GetLobbyDataValue(joinedLobby, KitchenGameLobby.LobbyDataKeys.MatchmakingStatus) == KitchenGameLobby.MatchmakingStatus.Searching.ToString()) {
+                findMatchButtonText.text = "SEARCHING...";
+            } else {
+                findMatchButtonText.text = "FIND MATCH";
+            }
+        } else {
+            PlayerData playerData = KitchenGameLobby.Instance.GetPlayerData();
+            if (playerData.matchmakingStatus == KitchenGameLobby.MatchmakingStatus.Searching.ToString()) {
+                findMatchButtonText.text = "SEARCHING...";
+            } else {
+                findMatchButtonText.text = "FIND MATCH";
+            }
+        }
+    }
+
+    private void KitchenGameLobbyOnLobbyJoinSucceeded(object sender, EventArgs e) {
         Lobby joinedLobby = KitchenGameLobby.Instance.GetLobby();
         lobbyCodeText.text = "Lobby Code: " + joinedLobby.LobbyCode;
     }
 
     private void OnDestroy() {
-        KitchenGameLobby.Instance.OnLobbyJoined -= KitchenGameLobbyOnLobbyJoined;
-        KitchenGameLobby.Instance.OnLobbyLeft -= KitchenGameLobbyOnLobbyLeft;
+        KitchenGameLobby.Instance.OnLobbyJoinSucceeded -= KitchenGameLobbyOnLobbyJoinSucceeded;
+        KitchenGameLobby.Instance.OnLobbyLeaveSucceeded -= KitchenGameLobbyOnLobbyLeaveSucceeded;
+        KitchenGameLobby.Instance.OnJoinedLobbyTopLevelDataChange -= KitchenGameLobbyOnJoinedLobbyTopLevelDataChange;
+
     }
 }

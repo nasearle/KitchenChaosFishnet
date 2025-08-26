@@ -2,6 +2,7 @@ using System;
 using FishNet;
 using FishNet.Managing;
 using FishNet.Transporting;
+using Unity.Services.Lobbies.Models;
 using UnityEngine;
 
 public class LobbyPlayerConnection : MonoBehaviour {
@@ -16,6 +17,25 @@ public class LobbyPlayerConnection : MonoBehaviour {
         Instance = this;
         
         _networkManager = InstanceFinder.NetworkManager;
+    }
+
+    private void Start() {
+        KitchenGameLobby.Instance.OnJoinedLobbyTopLevelDataChange += KitchenGameLobbyOnJoinedLobbyTopLevelDataChange;
+    }
+
+    private void KitchenGameLobbyOnJoinedLobbyTopLevelDataChange(object sender, EventArgs e) {
+        Lobby joinedLobby = KitchenGameLobby.Instance.GetLobby();
+        if (joinedLobby == null) {
+            return;
+        }
+
+        Debug.Log("KitchenGameLobbyOnJoinedLobbyTopLevelDataChange matchmakingstatus");
+
+        Debug.Log(LobbyPlayerDataConverter.GetLobbyDataValue(joinedLobby, KitchenGameLobby.LobbyDataKeys.MatchmakingStatus));
+
+        if (LobbyPlayerDataConverter.GetLobbyDataValue(joinedLobby, KitchenGameLobby.LobbyDataKeys.MatchmakingStatus) == KitchenGameLobby.MatchmakingStatus.MatchFound.ToString()) {
+            StartClient();
+        }
     }
 
     public void StartClient() {
@@ -33,5 +53,6 @@ public class LobbyPlayerConnection : MonoBehaviour {
 
     private void OnDestroy() {
         _networkManager.ClientManager.OnClientConnectionState -= ClientManagerOnClientConnectionState;
+        KitchenGameLobby.Instance.OnJoinedLobbyTopLevelDataChange -= KitchenGameLobbyOnJoinedLobbyTopLevelDataChange;
     }
 }

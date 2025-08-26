@@ -13,16 +13,16 @@ public class CharacterColorSelectSingleUI : MonoBehaviour {
             await KitchenGameLobby.Instance.SetPlayerColor(colorId);
         });
 
-        KitchenGameLobby.Instance.OnLobbyJoined += KitchenGameLobbyOnLobbyJoined;
-        KitchenGameLobby.Instance.OnJoinedLobbyDataUpdated += KitchenGameLobbyOnJoinedLobbyDataUpdated;
-        KitchenGameLobby.Instance.OnPlayerDataUpdated += KitchenGameLobbyOnPlayerDataUpdated;
+        KitchenGameLobby.Instance.OnLobbyJoinSucceeded += KitchenGameLobbyOnLobbyJoinSucceeded;
+        KitchenGameLobby.Instance.OnJoinedLobbyAnyChange += KitchenGameLobbyOnJoinedLobbyAnyChange;
+        KitchenGameLobby.Instance.OnPlayerDataChanged += KitchenGameLobbyOnPlayerDataChanged;
 
         image.color = KitchenGameLobby.Instance.GetPlayerColorByColorId(colorId);
 
         UpdateIsSelected();
     }
 
-    private void KitchenGameLobbyOnPlayerDataUpdated(object sender, EventArgs e) {
+    private void KitchenGameLobbyOnPlayerDataChanged(object sender, EventArgs e) {
         Lobby joinedLobby = KitchenGameLobby.Instance.GetLobby();
         if (joinedLobby != null) {
             return;
@@ -31,20 +31,20 @@ public class CharacterColorSelectSingleUI : MonoBehaviour {
         UpdateIsSelected();
     }
 
-    private void KitchenGameLobbyOnLobbyJoined(object sender, EventArgs e) {
+    private void KitchenGameLobbyOnLobbyJoinSucceeded(object sender, EventArgs e) {
         UpdateIsSelected();
     }
 
-    private void KitchenGameLobbyOnJoinedLobbyDataUpdated(object sender, EventArgs e) {
+    private void KitchenGameLobbyOnJoinedLobbyAnyChange(object sender, EventArgs e) {
         UpdateIsSelected();
     }
 
     private void UpdateIsSelected() {
         Lobby joinedLobby = KitchenGameLobby.Instance.GetLobby();
         if (joinedLobby != null) {
-            Unity.Services.Lobbies.Models.Player playerData = KitchenGameLobby.Instance.GetLobbyPlayerData();
+            Unity.Services.Lobbies.Models.Player playerData = KitchenGameLobby.Instance.GetLobbyPlayerDataForLocalPlayer();
 
-            SetColorAsSelected(LobbyPlayerDataConverter.GetPlayerDataValue<int>(playerData, "colorId"));
+            SetColorAsSelected(LobbyPlayerDataConverter.GetPlayerDataValue<int>(playerData, KitchenGameLobby.LobbyDataKeys.ColorId));
         } else {
             SetColorAsSelected(KitchenGameLobby.Instance.GetPlayerColor());
         }
@@ -59,8 +59,8 @@ public class CharacterColorSelectSingleUI : MonoBehaviour {
     }
 
     private void OnDestroy() {
-        KitchenGameLobby.Instance.OnLobbyJoined -= KitchenGameLobbyOnLobbyJoined;
-        KitchenGameLobby.Instance.OnJoinedLobbyDataUpdated -= KitchenGameLobbyOnJoinedLobbyDataUpdated;
-        KitchenGameLobby.Instance.OnPlayerDataUpdated -= KitchenGameLobbyOnPlayerDataUpdated;
+        KitchenGameLobby.Instance.OnLobbyJoinSucceeded -= KitchenGameLobbyOnLobbyJoinSucceeded;
+        KitchenGameLobby.Instance.OnJoinedLobbyAnyChange -= KitchenGameLobbyOnJoinedLobbyAnyChange;
+        KitchenGameLobby.Instance.OnPlayerDataChanged -= KitchenGameLobbyOnPlayerDataChanged;
     }
 }
