@@ -2707,7 +2707,6 @@ GameObject:
   m_Component:
   - component: {fileID: 824978789}
   - component: {fileID: 824978788}
-  - component: {fileID: 824978787}
   m_Layer: 0
   m_Name: CinemachineCamera
   m_TagString: Untagged
@@ -2715,23 +2714,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &824978787
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 824978786}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 68bb026fafb42b14791938953eaace77, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  NoiseProfile: {fileID: 11400000, guid: 46965f9cbaf525742a6da4c2172a99cd, type: 2}
-  PivotOffset: {x: 0, y: 0, z: 0}
-  AmplitudeGain: 1
-  FrequencyGain: 0.5
-  m_NoiseOffsets: {x: 0, y: 0, z: 0}
 --- !u!114 &824978788
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4257,6 +4239,50 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 1156556110346482468, guid: b5d9346e626382645957e277771ba94e, type: 3}
   m_PrefabInstance: {fileID: 1208278574}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1243023705
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1243023706}
+  - component: {fileID: 1243023707}
+  m_Layer: 0
+  m_Name: InitializeUnityGamingServices
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1243023706
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1243023705}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1243023707
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1243023705}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 780e0d794f9700c4b9312d0e0d238862, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1480002602
 GameObject:
   m_ObjectHideFlags: 0
@@ -4771,6 +4797,50 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 1156556110346482468, guid: b5d9346e626382645957e277771ba94e, type: 3}
   m_PrefabInstance: {fileID: 1551845521}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1578356321
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1578356323}
+  - component: {fileID: 1578356322}
+  m_Layer: 0
+  m_Name: KitchenGameDedicatedServer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1578356322
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1578356321}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efb755d9d6c61ba4e8d3af55cee0c409, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &1578356323
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1578356321}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1579417434
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5655,3 +5725,5 @@ SceneRoots:
   - {fileID: 1588959734}
   - {fileID: 1979065192}
   - {fileID: 328454395}
+  - {fileID: 1243023706}
+  - {fileID: 1578356323}

@@ -29,10 +29,6 @@ public class LobbyPlayerConnection : MonoBehaviour {
             return;
         }
 
-        Debug.Log("KitchenGameLobbyOnJoinedLobbyTopLevelDataChange matchmakingstatus");
-
-        Debug.Log(LobbyPlayerDataConverter.GetLobbyDataValue(joinedLobby, KitchenGameLobby.LobbyDataKeys.MatchmakingStatus));
-
         if (LobbyPlayerDataConverter.GetLobbyDataValue(joinedLobby, KitchenGameLobby.LobbyDataKeys.MatchmakingStatus) == KitchenGameLobby.MatchmakingStatus.MatchFound.ToString()) {
             StartClient();
         }

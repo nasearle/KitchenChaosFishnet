@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using FishNet.Component.Spawning;
 using FishNet.Connection;
 using FishNet.Managing;
@@ -7,6 +8,7 @@ using FishNet.Managing.Scened;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using FishNet.Transporting;
+using Unity.Services.Multiplay;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -52,6 +54,9 @@ public class GameManager : NetworkBehaviour {
     private void Start() {
         GameInput.Instance.OnPauseAction += GameInputOnPauseAction;
         GameInput.Instance.OnInteractAction += GameInputOnInteractAction;
+#if UNITY_SERVER
+        Camera.main.enabled = false;
+#endif
     }
     
     public override void OnStartNetwork() {
@@ -127,6 +132,10 @@ public class GameManager : NetworkBehaviour {
 
         if (allClientsReady) {
             _state.Value = State.CountdownToStart;
+
+#if UNITY_SERVER
+            MultiplayService.Instance.UnreadyServerAsync();
+#endif
         }
     }
 

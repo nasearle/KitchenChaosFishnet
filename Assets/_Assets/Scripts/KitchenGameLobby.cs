@@ -38,6 +38,15 @@ public class KitchenGameLobby : MonoBehaviour {
 
     // Event for local player data object that exists outside the lobby
     public event EventHandler OnPlayerDataChanged;
+    public event EventHandler OnUnityGamingServicesInitialized;
+
+    [SerializeField] private List<Color> playerColorList;
+
+    private Lobby _joinedLobby;
+    private ILobbyEvents _lobbyEvents;
+    private LobbyEventCallbacks _lobbyEventCallbacks;
+    private float _heartbeatTimer;
+    private PlayerData _playerData;
 
     public static class LobbyDataKeys {
         public const string ColorId = "ColorId";
@@ -50,65 +59,27 @@ public class KitchenGameLobby : MonoBehaviour {
         Searching,
         MatchFound,
     }
-    
-    [SerializeField] private List<Color> playerColorList;
 
-    private NetworkManager _networkManager;
-    private Lobby _joinedLobby;
-    private ILobbyEvents _lobbyEvents;
-    private LobbyEventCallbacks _lobbyEventCallbacks;
-    private float _heartbeatTimer;
-    private PlayerData _playerData;
-
-    void Awake() {
+    private void Awake() {
         Instance = this;
 
         DontDestroyOnLoad(gameObject);
 
-        _networkManager = InstanceFinder.NetworkManager;
-
-        _networkManager.ServerManager.OnServerConnectionState += ServerManagerOnServerConnectionState;
-
         _playerData = new PlayerData();
 
         _playerData.playerName = PlayerPrefs.GetString(PLAYER_PREFS_PLAYER_NAME, "PlayerName" + UnityEngine.Random.Range(100, 1000));
-
-        InitializeUnityAuthentication();
     }
 
-    private void ServerManagerOnServerConnectionState(ServerConnectionStateArgs stateArgs) {
-        if (stateArgs.ConnectionState == LocalConnectionState.Started) {
-            Loader.LoadNetwork(Loader.Scene.ManagersLoadingScene);
-        }
+    private void Start() {
+        if (UnityServices.State == ServicesInitializationState.Initialized) {
+            InitializeUnityGamingServicesOnInitialized(this, EventArgs.Empty);
+        } else {
+            InitializeUnityGamingServices.Instance.OnInitialized += InitializeUnityGamingServicesOnInitialized;
+        }        
     }
 
-    private async void InitializeUnityAuthentication() {
-        Debug.Log("InitializeUnityAuthentication");
-        // TODO: remove this for production
-        bool dedicatedServer = CurrentPlayer.ReadOnlyTags().Length > 0 && CurrentPlayer.ReadOnlyTags()[0] == "server";
-
-        if (UnityServices.State != ServicesInitializationState.Initialized) {
-            Debug.Log("InitializeUnityAuthentication initializing");            
-
-            InitializationOptions initializationOptions = new InitializationOptions();
-
-            if (!dedicatedServer) {
-                initializationOptions.SetProfile(UnityEngine.Random.Range(0, 1000).ToString());
-            }
-
-            await UnityServices.InitializeAsync(initializationOptions);
-
-            if (!dedicatedServer) {
-                await AuthenticationService.Instance.SignInAnonymouslyAsync();              
-            }
-
-            if (dedicatedServer) {
-                Debug.Log("InitializeUnityAuthentication dedicated server");
-                // Triggers the server connection state listener above and moves
-                // to the ManagersLoadingScene
-                _networkManager.ServerManager.StartConnection();
-            }
-        }
+    private void InitializeUnityGamingServicesOnInitialized(object sender, EventArgs e) {
+        OnUnityGamingServicesInitialized?.Invoke(this, EventArgs.Empty);
     }
 
     void Update() {
@@ -306,6 +277,8 @@ public class KitchenGameLobby : MonoBehaviour {
             OnLobbyJoinSucceeded?.Invoke(this, EventArgs.Empty);
         } catch (LobbyServiceException e) {
             Debug.Log(e);
+            // TODO: could pass e.Message to the event to tell the player the
+            // reason for the failure. E.g. "lobby is full"
             OnLobbyJoinFailed?.Invoke(this, EventArgs.Empty);
         }
     }
@@ -567,5 +540,9 @@ public class KitchenGameLobby : MonoBehaviour {
             }
         }
         return -1;
+    }
+
+    private void OnDestroy() {
+        InitializeUnityGamingServices.Instance.OnInitialized += InitializeUnityGamingServicesOnInitialized;
     }
 }

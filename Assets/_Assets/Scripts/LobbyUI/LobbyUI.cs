@@ -18,6 +18,14 @@ public class LobbyUI : MonoBehaviour {
     [SerializeField] private TextMeshProUGUI findMatchButtonText;
 
     private void Start() {
+        // Make all buttons not interactable initially
+        createLobbyButton.interactable = false;
+        joinCodeButton.interactable = false;
+        findMatchButton.interactable = false;
+        testMatchFoundButton.interactable = false;
+
+        KitchenGameLobby.Instance.OnUnityGamingServicesInitialized += KitchenGameLobbyOnUnityGamingServicesInitialized;       
+
         mainMenuButton.onClick.AddListener(async () => {
             await KitchenGameLobby.Instance.LeaveLobby();
             Loader.Load(Loader.Scene.MainMenuScene);
@@ -54,6 +62,13 @@ public class LobbyUI : MonoBehaviour {
         });
     }
 
+    private void KitchenGameLobbyOnUnityGamingServicesInitialized(object sender, EventArgs e) {
+        createLobbyButton.interactable = true;
+        joinCodeButton.interactable = true;
+        findMatchButton.interactable = true;
+        testMatchFoundButton.interactable = true;
+    }
+
     private void KitchenGameLobbyOnJoinedLobbyTopLevelDataChange(object sender, EventArgs e) {
         UpdateFindMatchUI();
     }
@@ -87,9 +102,9 @@ public class LobbyUI : MonoBehaviour {
     }
 
     private void OnDestroy() {
+        KitchenGameLobby.Instance.OnUnityGamingServicesInitialized -= KitchenGameLobbyOnUnityGamingServicesInitialized;
         KitchenGameLobby.Instance.OnLobbyJoinSucceeded -= KitchenGameLobbyOnLobbyJoinSucceeded;
         KitchenGameLobby.Instance.OnLobbyLeaveSucceeded -= KitchenGameLobbyOnLobbyLeaveSucceeded;
         KitchenGameLobby.Instance.OnJoinedLobbyTopLevelDataChange -= KitchenGameLobbyOnJoinedLobbyTopLevelDataChange;
-
     }
 }
