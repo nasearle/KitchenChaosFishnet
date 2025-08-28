@@ -26,7 +26,9 @@ public class KitchenGameDedicatedServer : MonoBehaviour {
 
     private void ServerManagerOnServerConnectionState(ServerConnectionStateArgs stateArgs) {
         if (stateArgs.ConnectionState == LocalConnectionState.Started) {
-            Loader.LoadNetwork(Loader.Scene.ManagersLoadingScene);
+            Debug.Log("DEDICATED_SERVER LOBBY CONNECTION STARTED");
+            Debug.Log("DEDICATED_SERVER Loading the GameScene...");
+            Loader.LoadNetwork(Loader.Scene.GameScene);
         }
     }
 
@@ -54,7 +56,7 @@ public class KitchenGameDedicatedServer : MonoBehaviour {
     }
 
     private async void InitializeUnityGamingServicesOnInitialized(object sender, EventArgs e) {
-        Debug.Log("DEDICATED_SERVER");
+        Debug.Log("DEDICATED_SERVER LOBBY");
 
         MultiplayEventCallbacks multiplayEventCallbacks = new MultiplayEventCallbacks();
         multiplayEventCallbacks.Allocate += MultiplayEventCallbacks_Allocate;
@@ -109,6 +111,7 @@ public class KitchenGameDedicatedServer : MonoBehaviour {
         _networkManager.TransportManager.Transport.SetServerBindAddress(ipv4Address, IPAddressType.IPv4);
         _networkManager.TransportManager.Transport.SetPort(port);
 
+        Debug.Log("DEDICATED_SERVER STARTING CONNECTION");
         _networkManager.ServerManager.StartConnection();
 
         try {
@@ -116,14 +119,6 @@ public class KitchenGameDedicatedServer : MonoBehaviour {
         } catch (Exception e) {
             Debug.LogError($"Error in MultiplayEventCallbacks_Allocate: {e}");
         }
-
-        // bool dedicatedServer = CurrentPlayer.ReadOnlyTags().Length > 0 && CurrentPlayer.ReadOnlyTags()[0] == "server";
-        // if (dedicatedServer) {
-        //     Debug.Log("InitializeUnityGamingServicesOnInitialized dedicated server");
-        //     // Triggers the server connection state listener above and moves
-        //     // to the ManagersLoadingScene
-        //     _networkManager.ServerManager.StartConnection();
-        // }
     }
 
     private void OnDestroy() {

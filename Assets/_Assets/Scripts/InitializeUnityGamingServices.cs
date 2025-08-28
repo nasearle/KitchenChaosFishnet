@@ -16,23 +16,21 @@ public class InitializeUnityGamingServices : MonoBehaviour {
 
     private async void InitializeUnityAuthentication() {
         Debug.Log("InitializeUnityAuthentication");
-        // TODO: remove this for production
-        bool dedicatedServer = CurrentPlayer.ReadOnlyTags().Length > 0 && CurrentPlayer.ReadOnlyTags()[0] == "server";
 
         if (UnityServices.State != ServicesInitializationState.Initialized) {
             Debug.Log("InitializeUnityAuthentication initializing");            
 
             InitializationOptions initializationOptions = new InitializationOptions();
 
-            if (!dedicatedServer) {
-                initializationOptions.SetProfile(UnityEngine.Random.Range(0, 1000).ToString());
-            }
+#if !UNITY_SERVER && LOCAL_CLIENT_DEV
+            initializationOptions.SetProfile(CurrentPlayer.ReadOnlyTags()[0]);
+#endif
 
             await UnityServices.InitializeAsync(initializationOptions);
 
-            if (!dedicatedServer) {
-                await AuthenticationService.Instance.SignInAnonymouslyAsync();              
-            }
+#if !UNITY_SERVER
+            await AuthenticationService.Instance.SignInAnonymouslyAsync();              
+#endif
         }
 
         OnInitialized?.Invoke(this, EventArgs.Empty);

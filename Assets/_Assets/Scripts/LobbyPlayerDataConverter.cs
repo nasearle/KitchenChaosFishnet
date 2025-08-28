@@ -53,6 +53,23 @@ public static class LobbyPlayerDataConverter
         return defaultValue;
     }
 
+    public static T GetLobbyDataValue<T>(Lobby lobby, string key, T defaultValue = default(T))
+    {
+        string stringValue = GetLobbyDataValue(lobby, key);
+
+        if (string.IsNullOrEmpty(stringValue))
+            return defaultValue;
+        
+        try
+        {
+            return (T)System.Convert.ChangeType(stringValue, typeof(T));
+        }
+        catch (System.Exception)
+        {
+            return defaultValue;
+        }
+    }
+
     // Generic helper for type conversion
     public static T GetPlayerDataValue<T>(Unity.Services.Lobbies.Models.Player player, string key, T defaultValue = default(T))
     {

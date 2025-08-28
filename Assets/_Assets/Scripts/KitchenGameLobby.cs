@@ -1,19 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using FishNet;
-using FishNet.Managing;
-using FishNet.Transporting;
-using Unity.Multiplayer.Playmode;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
 using Unity.Services.Matchmaker.Models;
-using UnityEditor.Rendering;
-using UnityEditor.SearchService;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class KitchenGameLobby : MonoBehaviour {
     private const int MAX_PLAYER_AMOUNT = 4;
@@ -52,6 +45,8 @@ public class KitchenGameLobby : MonoBehaviour {
         public const string ColorId = "ColorId";
         public const string PlayerName = "PlayerName";
         public const string MatchmakingStatus = "MatchmakingStatus";
+        public const string ServerIp = "ServerIp";
+        public const string ServerPort = "ServerPort";
     }
 
     public enum MatchmakingStatus {
@@ -438,15 +433,7 @@ public class KitchenGameLobby : MonoBehaviour {
         await LobbyService.Instance.UpdateLobbyAsync(_joinedLobby.Id, options);
     }
 
-    public void OnMatchFound() {
-        if (_joinedLobby != null) {
-            SetLobbyMatchFoundDetails("assignment");
-        } else {
-            LobbyPlayerConnection.Instance.StartClient();
-        }
-    }
-
-    public async void SetLobbyMatchFoundDetails(string assignment) {
+    public async void SetLobbyMatchFoundDetails(MultiplayAssignment assignment) {
         if (_joinedLobby == null || !IsLocalPlayerLobbyHost()) {
             return;
         }
@@ -455,8 +442,8 @@ public class KitchenGameLobby : MonoBehaviour {
             // Update lobby with connection information
             var lobbyData = new Dictionary<string, DataObject> {
                 {LobbyDataKeys.MatchmakingStatus, new DataObject(DataObject.VisibilityOptions.Member, MatchmakingStatus.MatchFound.ToString())},
-                // {"serverIp", new DataObject(DataObject.VisibilityOptions.Member, assignment.Ip)},
-                // {"serverPort", new DataObject(DataObject.VisibilityOptions.Member, assignment.Port.ToString())},
+                {LobbyDataKeys.ServerIp, new DataObject(DataObject.VisibilityOptions.Member, assignment.Ip)},
+                {LobbyDataKeys.ServerPort, new DataObject(DataObject.VisibilityOptions.Member, assignment.Port.ToString())},
                 // {"matchId", new DataObject(DataObject.VisibilityOptions.Member, assignment.MatchId)},
                 // {"gameServerUrl", new DataObject(DataObject.VisibilityOptions.Member, $"{assignment.Ip}:{assignment.Port}")},
             };

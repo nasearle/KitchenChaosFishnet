@@ -31,18 +31,29 @@ public class NetworkConnections : NetworkBehaviour {
         _playerDataSyncList.OnChange += PlayerDataSyncListOnChange;
     }
 
-    public override void OnStartNetwork() {
+    private void Start() {
         if (!IsServerStarted) {
             SetPlayerNameServerRpc(KitchenGameLobby.Instance.GetPlayerName());
             SetPlayerIdServerRpc(AuthenticationService.Instance.PlayerId);
-            ClientLoadedManagerScriptsServerRpc();
         }
-
-        // if (IsServerStarted) {
-            // Get the player data from the lobby and set the _playerDataSyncList
-            // Delete the lobby
-        // }
     }
+
+    // public override void OnStartNetwork() {
+    //     if (!IsServerStarted) {
+    //         SetPlayerNameServerRpc(KitchenGameLobby.Instance.GetPlayerName());
+    //         SetPlayerIdServerRpc(AuthenticationService.Instance.PlayerId);
+
+    //         Debug.Log("NetworkConnection OnStartNetwork");
+    //         ClientLoadedManagerScriptsServerRpc();
+    //     } else {
+    //         Debug.Log("DEDICATED_SERVER NetworkConnection spawned on server");
+    //     }
+
+    //     // if (IsServerStarted) {
+    //         // Get the player data from the lobby and set the _playerDataSyncList
+    //         // Delete the lobby
+    //     // }
+    // }
 
     [ServerRpc(RequireOwnership = false)]
     private void SetPlayerNameServerRpc(string playerName, NetworkConnection conn = null) {
@@ -68,6 +79,8 @@ public class NetworkConnections : NetworkBehaviour {
 
     [ServerRpc(RequireOwnership = false)]
     private void ClientLoadedManagerScriptsServerRpc(NetworkConnection conn = null) {
+        Debug.Log("DEDICATED_SERVER ClientLoadedManagerScriptsServerRpc");
+        Debug.Log("DEDICATED_SERVER Loading the GameScene...");
         Loader.LoadSingleClientNetwork(Loader.Scene.GameScene, conn);
     }
 
@@ -77,18 +90,6 @@ public class NetworkConnections : NetworkBehaviour {
     
     private void ServerManagerOnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs stateArgs) {
         if (stateArgs.ConnectionState == RemoteConnectionState.Started) {
-            if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != Loader.Scene.ManagersLoadingScene.ToString()) {
-                Debug.Log("Not connecting because the game has already started");
-                conn.Kick(KickReason.Unset);
-                return;
-            }
-
-            if (_networkManager.ServerManager.Clients.Keys.Count > MAX_PLAYER_AMOUNT) {
-                Debug.Log("Not connecting because the game is full");
-                conn.Kick(KickReason.Unset);
-                return;
-            }
-
             _playerDataSyncList.Add(new PlayerData {
                 clientId = conn.ClientId,
                 colorId = GetFirstUnusedColorId(),

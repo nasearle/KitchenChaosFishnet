@@ -11,7 +11,6 @@ public class LobbyUI : MonoBehaviour {
     [SerializeField] private Button createLobbyButton;
     [SerializeField] private Button joinCodeButton;
     [SerializeField] private Button findMatchButton;
-    [SerializeField] private Button testMatchFoundButton;
     [SerializeField] private TMP_InputField joinCodeInputField;
     [SerializeField] private TMP_InputField playerNameInputField;
     [SerializeField] private TextMeshProUGUI lobbyCodeText;
@@ -22,7 +21,6 @@ public class LobbyUI : MonoBehaviour {
         createLobbyButton.interactable = false;
         joinCodeButton.interactable = false;
         findMatchButton.interactable = false;
-        testMatchFoundButton.interactable = false;
 
         KitchenGameLobby.Instance.OnUnityGamingServicesInitialized += KitchenGameLobbyOnUnityGamingServicesInitialized;       
 
@@ -40,12 +38,9 @@ public class LobbyUI : MonoBehaviour {
         });
 
         findMatchButton.onClick.AddListener(async () => {
+            KitchenGameMatchmaker.Instance.FindMatch();
             UpdateFindMatchUI();
             await KitchenGameLobby.Instance.SetPlayerMatchmakingStatus(KitchenGameLobby.MatchmakingStatus.Searching);
-        });
-
-        testMatchFoundButton.onClick.AddListener(() => {
-            KitchenGameLobby.Instance.OnMatchFound();
         });
 
         KitchenGameLobby.Instance.OnLobbyJoinSucceeded += KitchenGameLobbyOnLobbyJoinSucceeded;
@@ -66,7 +61,6 @@ public class LobbyUI : MonoBehaviour {
         createLobbyButton.interactable = true;
         joinCodeButton.interactable = true;
         findMatchButton.interactable = true;
-        testMatchFoundButton.interactable = true;
     }
 
     private void KitchenGameLobbyOnJoinedLobbyTopLevelDataChange(object sender, EventArgs e) {

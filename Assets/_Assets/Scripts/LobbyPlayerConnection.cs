@@ -30,8 +30,17 @@ public class LobbyPlayerConnection : MonoBehaviour {
         }
 
         if (LobbyPlayerDataConverter.GetLobbyDataValue(joinedLobby, KitchenGameLobby.LobbyDataKeys.MatchmakingStatus) == KitchenGameLobby.MatchmakingStatus.MatchFound.ToString()) {
+            string ipv4Address = LobbyPlayerDataConverter.GetLobbyDataValue(joinedLobby, KitchenGameLobby.LobbyDataKeys.ServerIp);
+            ushort port = LobbyPlayerDataConverter.GetLobbyDataValue<ushort>(joinedLobby, KitchenGameLobby.LobbyDataKeys.ServerPort);
+            
+            SetConnectionData(ipv4Address, port);
             StartClient();
         }
+    }
+
+    public void SetConnectionData(string ipv4Address, ushort port) {
+        _networkManager.TransportManager.Transport.SetClientAddress(ipv4Address);
+        _networkManager.TransportManager.Transport.SetPort(port);
     }
 
     public void StartClient() {
