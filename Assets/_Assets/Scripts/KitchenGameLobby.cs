@@ -279,7 +279,7 @@ public class KitchenGameLobby : MonoBehaviour {
     }
 
     public async void DeleteLobby() {
-        if (_joinedLobby != null) {
+        if (_joinedLobby != null && IsLocalPlayerLobbyHost()) {
             try {
                 await LobbyService.Instance.DeleteLobbyAsync(_joinedLobby.Id);
 
@@ -453,12 +453,6 @@ public class KitchenGameLobby : MonoBehaviour {
             };
             
             await LobbyService.Instance.UpdateLobbyAsync(_joinedLobby.Id, options);
-            
-            // Give other players time to see the update before transitioning
-            // await Task.Delay(2000);
-            
-            // Start the game transition
-            // StartGameTransition();
         } catch (LobbyServiceException e) {
             Debug.LogError($"Failed to update lobby with match data: {e}");
         }

@@ -101,6 +101,14 @@ public class GameManager : NetworkBehaviour {
     }
 
     private void StateOnChange(State prev, State next, bool asServer) {
+        if (IsCountdownToStartActive()) {
+            // All players have entered the game and readied up. Can safely
+            // delete the lobby.
+            if (KitchenGameLobby.Instance.IsLocalPlayerLobbyHost()) {
+                KitchenGameLobby.Instance.DeleteLobby();
+            }
+        }
+        
         OnStateChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -135,6 +143,7 @@ public class GameManager : NetworkBehaviour {
 
 #if UNITY_SERVER
             MultiplayService.Instance.UnreadyServerAsync();
+            // Delete lobby here?
 #endif
         }
     }
