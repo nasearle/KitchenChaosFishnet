@@ -44,14 +44,11 @@ public class KitchenGameMatchmaker : MonoBehaviour {
 
         if (lobby != null) {
             foreach (Unity.Services.Lobbies.Models.Player player in lobby.Players) {
-                int colorId = LobbyPlayerDataConverter.GetPlayerDataValue<int>(player, KitchenGameLobby.LobbyDataKeys.ColorId);
-
                 players.Add(
                     new Unity.Services.Matchmaker.Models.Player(
                         player.Id, 
                         new MatchmakingPlayerData {
                             Skill = 100,
-                            ColorId = colorId
                         }
                     )
                 );
@@ -62,7 +59,6 @@ public class KitchenGameMatchmaker : MonoBehaviour {
                     AuthenticationService.Instance.PlayerId, 
                     new MatchmakingPlayerData {
                         Skill = 100,
-                        ColorId = KitchenGameLobby.Instance.GetPlayerColor()
                     }
                 )
             );

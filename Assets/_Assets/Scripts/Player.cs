@@ -3,6 +3,7 @@ using FishNet.CodeGenerating;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Prediction;
+using FishNet.Object.Synchronizing;
 using FishNet.Transporting;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -61,13 +62,25 @@ public class Player : NetworkBehaviour, IKitchenObjectParent {
     private Vector3 _lastInteractDir;
     private BaseCounter _selectedCounter;
     private KitchenObject _kitchenObject;
+
+    private readonly SyncVar<int> _colorId = new SyncVar<int>();
+
+    private void Awake() {
+        _colorId.OnChange += ColorIdOnChange;
+    }
+
+    private void ColorIdOnChange(int prev, int nextColorId, bool asServer) {
+        playerVisual.SetPlayerColor(KitchenGameLobby.Instance.GetPlayerColorByColorId(nextColorId));
+    }
     
     private void Start() {
         GameInput.Instance.OnInteractAction += GameInputOnInteractAction;
         GameInput.Instance.OnInteractAlternateAction += GameInputOnInteractAlternateAction;
+    }
 
-        // PlayerData playerData = NetworkConnections.Instance.GetPlayerDataFromClientId(OwnerId);
-        // playerVisual.SetPlayerColor(NetworkConnections.Instance.GetPlayerColor(playerData.colorId));
+    [ServerRpc(RequireOwnership = false)]
+    private void SetPlayerColorSyncVarServerRpc(int colorId) {
+        _colorId.Value = colorId;
     }
 
     private void GameInputOnInteractAlternateAction(object sender, EventArgs e) {
@@ -89,6 +102,10 @@ public class Player : NetworkBehaviour, IKitchenObjectParent {
     public override void OnStartNetwork() {
         if (Owner.IsLocalClient) {
             LocalInstance = this;
+
+            int colorId = KitchenGameLobby.Instance.GetPlayerColorId();
+            playerVisual.SetPlayerColor(KitchenGameLobby.Instance.GetPlayerColorByColorId(colorId));
+            SetPlayerColorSyncVarServerRpc(colorId);
         }
         
         OnAnyPlayerSpawned?.Invoke(this, EventArgs.Empty);

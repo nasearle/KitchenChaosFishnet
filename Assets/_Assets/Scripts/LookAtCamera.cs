@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 
 public class LookAtCamera : MonoBehaviour {
+#if !UNITY_SERVER
     private enum Mode {
         LookAt,
         LookAtInverted,
@@ -28,4 +29,5 @@ public class LookAtCamera : MonoBehaviour {
                 break;
         }
     }
+#endif
 }

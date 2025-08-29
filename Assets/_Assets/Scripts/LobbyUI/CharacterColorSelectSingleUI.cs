@@ -46,7 +46,7 @@ public class CharacterColorSelectSingleUI : MonoBehaviour {
 
             SetColorAsSelected(LobbyPlayerDataConverter.GetPlayerDataValue<int>(playerData, KitchenGameLobby.LobbyDataKeys.ColorId));
         } else {
-            SetColorAsSelected(KitchenGameLobby.Instance.GetPlayerColor());
+            SetColorAsSelected(KitchenGameLobby.Instance.GetPlayerColorId());
         }
     }
 

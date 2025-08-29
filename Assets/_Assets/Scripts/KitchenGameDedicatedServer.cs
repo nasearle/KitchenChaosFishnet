@@ -11,6 +11,7 @@ public class KitchenGameDedicatedServer : MonoBehaviour {
     public static KitchenGameDedicatedServer Instance { get; private set; }
     private float _autoAllocateTimer = 9999999f;
     private bool _alreadyAutoAllocated;
+    private bool _addressAndPortSet;
     private static IServerQueryHandler _serverQueryHandler; // static so it doesn't get destroyed when this object is destroyed
     private NetworkManager _networkManager;
 
@@ -27,8 +28,11 @@ public class KitchenGameDedicatedServer : MonoBehaviour {
     private void ServerManagerOnServerConnectionState(ServerConnectionStateArgs stateArgs) {
         if (stateArgs.ConnectionState == LocalConnectionState.Started) {
             Debug.Log("DEDICATED_SERVER LOBBY CONNECTION STARTED");
-            Debug.Log("DEDICATED_SERVER Loading the GameScene...");
-            Loader.LoadNetwork(Loader.Scene.GameScene);
+
+            if (_addressAndPortSet) {
+                Debug.Log("DEDICATED_SERVER Loading the GameScene...");
+                Loader.LoadNetwork(Loader.Scene.GameScene);
+            }
         }
     }
 
@@ -108,10 +112,14 @@ public class KitchenGameDedicatedServer : MonoBehaviour {
         string ipv4Address = "0.0.0.0";
         ushort port = serverConfig.Port;
         
+        Debug.Log($"DEDICATED_SERVER setting TransportManager ipv4Address to {ipv4Address}");
         _networkManager.TransportManager.Transport.SetServerBindAddress(ipv4Address, IPAddressType.IPv4);
+        Debug.Log($"DEDICATED_SERVER setting TransportManager port to {port}");
         _networkManager.TransportManager.Transport.SetPort(port);
 
-        Debug.Log("DEDICATED_SERVER STARTING CONNECTION");
+        _addressAndPortSet = true;
+
+        Debug.Log("DEDICATED_SERVER STARTING CONNECTION MANUALLY");
         _networkManager.ServerManager.StartConnection();
 
         try {

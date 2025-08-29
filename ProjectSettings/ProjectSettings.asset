@@ -821,7 +821,7 @@ PlayerSettings:
   webWasm2023: 0
   scriptingDefineSymbols:
     Server: FISHNET;FISHNET_V4
-    Standalone: FISHNET;FISHNET_V4;LOCAL_DEV
+    Standalone: FISHNET;FISHNET_V4;LOCAL_CLIENT_DEV
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:

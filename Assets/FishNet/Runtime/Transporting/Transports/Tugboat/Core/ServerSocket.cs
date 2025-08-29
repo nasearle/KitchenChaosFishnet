@@ -248,9 +248,17 @@ namespace FishNet.Transporting.Tugboat.Server
         /// </summary>
         internal bool StartConnection(ushort port, int maximumClients, string ipv4BindAddress, string ipv6BindAddress)
         {
+            Debug.Log("SERVERSOCKET STARTCONNECTION");
+            Debug.Log($"SERVERSOCKET port[{port}]");
+            Debug.Log($"SERVERSOCKET maximumClients[{maximumClients}]");
+            Debug.Log($"SERVERSOCKET ipv4BindAddress[{ipv4BindAddress}]");
+            Debug.Log($"SERVERSOCKET ipv6BindAddress[{ipv6BindAddress}]");
+            
             //Force a stop just in case the socket did not clean up.
-            if (base.GetConnectionState() != LocalConnectionState.Stopped)
+            if (base.GetConnectionState() != LocalConnectionState.Stopped) {
+                Debug.Log("SERVERSOCKET CONNECTION ALREADY STARTED. STOPPING...");
                 StopSocket();
+            }
             //Enqueue starting.
             LocalConnectionStates.Enqueue(LocalConnectionState.Starting);
             //Iterate to cause state changes to invoke.

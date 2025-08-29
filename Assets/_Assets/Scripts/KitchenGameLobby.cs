@@ -230,7 +230,7 @@ public class KitchenGameLobby : MonoBehaviour {
             options.Player = new Unity.Services.Lobbies.Models.Player(
                 id: AuthenticationService.Instance.PlayerId,
                 data: new Dictionary<string, PlayerDataObject> {
-                    {LobbyDataKeys.ColorId, new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, GetPlayerColor().ToString())},
+                    {LobbyDataKeys.ColorId, new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, GetPlayerColorId().ToString())},
                     {LobbyDataKeys.PlayerName, new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, GetPlayerName())}
             });
             _joinedLobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, MAX_PLAYER_AMOUNT, options);
@@ -259,13 +259,13 @@ public class KitchenGameLobby : MonoBehaviour {
             options.Player = new Unity.Services.Lobbies.Models.Player(
                 id: AuthenticationService.Instance.PlayerId,
                 data: new Dictionary<string, PlayerDataObject> {
-                    {LobbyDataKeys.ColorId, new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, GetPlayerColor().ToString())},
+                    {LobbyDataKeys.ColorId, new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, GetPlayerColorId().ToString())},
                     {LobbyDataKeys.PlayerName, new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, GetPlayerName())}
             });
             _joinedLobby = await LobbyService.Instance.JoinLobbyByCodeAsync(lobbyCode, options);
             await SubscribeToLobbyEvents();
 
-            if (MoreThanOnePlayerHasColor(GetPlayerColor())) {
+            if (MoreThanOnePlayerHasColor(GetPlayerColorId())) {
                 await SetPlayerColor(GetFirstUnusedColorId());
             }            
 
@@ -329,7 +329,7 @@ public class KitchenGameLobby : MonoBehaviour {
         return _playerData.playerName;
     }
 
-    public int GetPlayerColor() {
+    public int GetPlayerColorId() {
         return _playerData.colorId;
     }
 
