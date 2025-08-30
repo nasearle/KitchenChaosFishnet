@@ -1,6 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using FishNet;
+using FishNet.Connection;
+using FishNet.Managing;
+using FishNet.Transporting;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Lobbies;
@@ -40,6 +44,7 @@ public class KitchenGameLobby : MonoBehaviour {
     private LobbyEventCallbacks _lobbyEventCallbacks;
     private float _heartbeatTimer;
     private PlayerData _playerData;
+    private NetworkManager _networkManager;
 
     public static class LobbyDataKeys {
         public const string ColorId = "ColorId";
@@ -60,9 +65,25 @@ public class KitchenGameLobby : MonoBehaviour {
 
         DontDestroyOnLoad(gameObject);
 
+        _networkManager = InstanceFinder.NetworkManager;
+        _networkManager.ServerManager.OnRemoteConnectionState += ServerManagerOnRemoteConnectionState;
+
         _playerData = new PlayerData();
 
         _playerData.playerName = PlayerPrefs.GetString(PLAYER_PREFS_PLAYER_NAME, "PlayerName" + UnityEngine.Random.Range(100, 1000));
+    }
+
+    private void ServerManagerOnRemoteConnectionState(NetworkConnection connection, RemoteConnectionStateArgs connectionStateArgs) {
+        if (connectionStateArgs.ConnectionState == RemoteConnectionState.Stopped) {
+            // The server counts itself as a connected client for some reason, 
+            // so subtract one to get the actual connected player count.
+            int connectedPlayers = _networkManager.ServerManager.Clients.Count - 1;
+
+            if (connectedPlayers == 0) {
+                Debug.Log("GAME_MANAGER ServerManagerOnRemoteConnectionState ALL CLIENTS DISCONNECTED");
+                ShutdownServer();
+            }
+        }
     }
 
     private void Start() {
@@ -79,6 +100,15 @@ public class KitchenGameLobby : MonoBehaviour {
 
     void Update() {
         HandleHeartbeat();
+
+#if UNITY_SERVER
+        if (KitchenGameDedicatedServer.serverQueryHandler != null) {
+            if (_networkManager.IsServerStarted) {
+                KitchenGameDedicatedServer.serverQueryHandler.CurrentPlayers = (ushort)_networkManager.ServerManager.Clients.Keys.Count;
+            }
+            KitchenGameDedicatedServer.serverQueryHandler.UpdateServerCheck();
+        }
+#endif
     }
 
     private void HandleHeartbeat() {
@@ -521,6 +551,15 @@ public class KitchenGameLobby : MonoBehaviour {
             }
         }
         return -1;
+    }
+
+    public void ShutdownServer() {
+#if UNITY_SERVER
+        Debug.Log("KITCHEN_GAME_LOBBY SHUTTING DOWN SERVER");
+        KitchenGameDedicatedServer.serverQueryHandler = null;
+        _networkManager.ServerManager.StopConnection(false);
+        Application.Quit();
+#endif
     }
 
     private void OnDestroy() {

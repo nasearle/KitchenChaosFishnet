@@ -143,7 +143,6 @@ public class GameManager : NetworkBehaviour {
 
 #if UNITY_SERVER
             MultiplayService.Instance.UnreadyServerAsync();
-            // Delete lobby here?
 #endif
         }
     }

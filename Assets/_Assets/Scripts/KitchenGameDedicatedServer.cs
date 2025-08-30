@@ -9,10 +9,10 @@ using UnityEngine;
 public class KitchenGameDedicatedServer : MonoBehaviour {
 #if UNITY_SERVER
     public static KitchenGameDedicatedServer Instance { get; private set; }
+    public static IServerQueryHandler serverQueryHandler; // static so it doesn't get destroyed when this object is destroyed
     private float _autoAllocateTimer = 9999999f;
     private bool _alreadyAutoAllocated;
     private bool _addressAndPortSet;
-    private static IServerQueryHandler _serverQueryHandler; // static so it doesn't get destroyed when this object is destroyed
     private NetworkManager _networkManager;
 
     private void Awake() {
@@ -50,13 +50,6 @@ public class KitchenGameDedicatedServer : MonoBehaviour {
             _autoAllocateTimer = 999f;
             MultiplayEventCallbacks_Allocate(null);
         }
-
-        if (_serverQueryHandler != null) {
-            if (_networkManager.IsServerStarted) {
-                _serverQueryHandler.CurrentPlayers = (ushort)_networkManager.ServerManager.Clients.Keys.Count;
-            }
-            _serverQueryHandler.UpdateServerCheck();
-        }
     }
 
     private async void InitializeUnityGamingServicesOnInitialized(object sender, EventArgs e) {
@@ -69,7 +62,7 @@ public class KitchenGameDedicatedServer : MonoBehaviour {
         multiplayEventCallbacks.SubscriptionStateChanged += MultiplayEventCallbacks_SubscriptionStateChanged;
         IServerEvents serverEvents = await MultiplayService.Instance.SubscribeToServerEventsAsync(multiplayEventCallbacks);
 
-        _serverQueryHandler = await MultiplayService.Instance.StartServerQueryHandlerAsync(4, "MyServerName", "KitchenChaos", "5.6", "Default");
+        serverQueryHandler = await MultiplayService.Instance.StartServerQueryHandlerAsync(4, "MyServerName", "KitchenChaos", "5.6", "Default");
 
         var serverConfig = MultiplayService.Instance.ServerConfig;
         if (serverConfig.AllocationId != "") {
