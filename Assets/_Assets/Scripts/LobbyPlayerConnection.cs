@@ -29,7 +29,9 @@ public class LobbyPlayerConnection : MonoBehaviour {
             return;
         }
 
-        if (LobbyPlayerDataConverter.GetLobbyDataValue(joinedLobby, KitchenGameLobby.LobbyDataKeys.MatchmakingStatus) == KitchenGameLobby.MatchmakingStatus.MatchFound.ToString()) {
+        string matchmakingStatus = LobbyPlayerDataConverter.GetLobbyDataValue(joinedLobby, KitchenGameLobby.LobbyDataKeys.MatchmakingStatus);
+
+        if (matchmakingStatus == KitchenGameLobby.MatchmakingStatus.MatchFound.ToString()) {
             string ipv4Address = LobbyPlayerDataConverter.GetLobbyDataValue(joinedLobby, KitchenGameLobby.LobbyDataKeys.ServerIp);
             ushort port = LobbyPlayerDataConverter.GetLobbyDataValue<ushort>(joinedLobby, KitchenGameLobby.LobbyDataKeys.ServerPort);
             

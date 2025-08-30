@@ -45,6 +45,7 @@ public class KitchenGameDedicatedServer : MonoBehaviour {
     }
 
     private void Update() {
+        // TODO: remove this
         _autoAllocateTimer -= Time.deltaTime;
         if (_autoAllocateTimer <= 0f) {
             _autoAllocateTimer = 999f;

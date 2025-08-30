@@ -19,6 +19,7 @@ public class LobbyPlayer : MonoBehaviour {
         KitchenGameLobby.Instance.OnJoinedLobbyPlayerStatusChanged += KitchenGameLobbyOnJoinedLobbyPlayerStatusChanged;
         KitchenGameLobby.Instance.OnPlayerDataChanged += KitchenGameLobbyOnPlayerDataChanged;
         KitchenGameLobby.Instance.OnLobbyLeaveSucceeded += KitchenGameLobbyOnLobbyLeaveSucceeded;
+        KitchenGameLobby.Instance.OnJoinedLobbyTopLevelDataChange += KitchenGameLobbyOnJoinedLobbyTopLevelDataChange;
 
         kickButton.onClick.AddListener(() => {
             Unity.Services.Lobbies.Models.Player playerData = KitchenGameLobby.Instance.GetLobbyPlayerDataFromPlayerIndex(playerIndex);
@@ -37,6 +38,16 @@ public class LobbyPlayer : MonoBehaviour {
 
         UpdatePlayerLobbyUI();
         UpdatePlayer();
+    }
+
+    private void KitchenGameLobbyOnJoinedLobbyTopLevelDataChange(object sender, EventArgs e) {
+        Lobby joinedLobby = KitchenGameLobby.Instance.GetLobby();
+        string matchmakingStatus = LobbyPlayerDataConverter.GetLobbyDataValue(joinedLobby, KitchenGameLobby.LobbyDataKeys.MatchmakingStatus);
+        if (matchmakingStatus == KitchenGameLobby.MatchmakingStatus.Waiting.ToString()) {
+            makeHostButton.interactable = true;
+        } else {
+            makeHostButton.interactable = false;
+        }
     }
 
     private void KitchenGameLobbyOnLobbyLeaveSucceeded(object sender, EventArgs e) {
@@ -173,5 +184,6 @@ public class LobbyPlayer : MonoBehaviour {
         KitchenGameLobby.Instance.OnJoinedLobbyPlayerStatusChanged -= KitchenGameLobbyOnJoinedLobbyPlayerStatusChanged;
         KitchenGameLobby.Instance.OnPlayerDataChanged -= KitchenGameLobbyOnPlayerDataChanged;
         KitchenGameLobby.Instance.OnLobbyLeaveSucceeded -= KitchenGameLobbyOnLobbyLeaveSucceeded;
+        KitchenGameLobby.Instance.OnJoinedLobbyTopLevelDataChange -= KitchenGameLobbyOnJoinedLobbyTopLevelDataChange;
     }
 }

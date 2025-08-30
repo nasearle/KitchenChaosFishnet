@@ -57,6 +57,7 @@ public class KitchenGameLobby : MonoBehaviour {
     public enum MatchmakingStatus {
         Waiting,
         Searching,
+        Cancelling,
         MatchFound,
     }
 
@@ -87,11 +88,40 @@ public class KitchenGameLobby : MonoBehaviour {
     }
 
     private void Start() {
+        KitchenGameMatchmaker.Instance.OnFindMatchStarted += KitchenGameMatchmakerOnFindMatchStarted;
+        KitchenGameMatchmaker.Instance.OnFindMatchFailed += KitchenGameMatchmakerOnFindMatchFailed;
+        KitchenGameMatchmaker.Instance.OnCancelFindMatchStarted += KitchenGameMatchmakerOnCancelFindMatchStarted;
+        KitchenGameMatchmaker.Instance.OnCancelFindMatchSucceeded += KitchenGameMatchmakerOnCancelFindMatchSucceeded;
+        KitchenGameMatchmaker.Instance.OnCancelFindMatchFailed += KitchenGameMatchmakerOnCancelFindMatchFailed;
+
         if (UnityServices.State == ServicesInitializationState.Initialized) {
             InitializeUnityGamingServicesOnInitialized(this, EventArgs.Empty);
         } else {
             InitializeUnityGamingServices.Instance.OnInitialized += InitializeUnityGamingServicesOnInitialized;
-        }        
+        }
+    }
+
+    private async void KitchenGameMatchmakerOnCancelFindMatchFailed(object sender, EventArgs e) {
+        await SetPlayerMatchmakingStatus(MatchmakingStatus.Searching);
+    }
+
+    private async void KitchenGameMatchmakerOnCancelFindMatchSucceeded(object sender, EventArgs e) {
+        await SetPlayerMatchmakingStatus(MatchmakingStatus.Waiting);
+    }
+
+    private void KitchenGameMatchmakerOnCancelFindMatchStarted(object sender, EventArgs e) {
+        // Only the local player needs to know about the cancelling status.
+        _playerData.matchmakingStatus = MatchmakingStatus.Cancelling.ToString();
+
+        OnPlayerDataChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private async void KitchenGameMatchmakerOnFindMatchFailed(object sender, EventArgs e) {
+        await SetPlayerMatchmakingStatus(MatchmakingStatus.Waiting);
+    }
+
+    private async void KitchenGameMatchmakerOnFindMatchStarted(object sender, EventArgs e) {
+        await SetPlayerMatchmakingStatus(MatchmakingStatus.Searching);
     }
 
     private void InitializeUnityGamingServicesOnInitialized(object sender, EventArgs e) {
@@ -392,6 +422,8 @@ public class KitchenGameLobby : MonoBehaviour {
     public async Task SetPlayerMatchmakingStatus(MatchmakingStatus status) {
         _playerData.matchmakingStatus = status.ToString();
 
+        OnPlayerDataChanged?.Invoke(this, EventArgs.Empty);
+
         await SetLobbyMatchmakingStatus(status);
     }
 
@@ -467,6 +499,10 @@ public class KitchenGameLobby : MonoBehaviour {
         if (_joinedLobby == null || !IsLocalPlayerLobbyHost()) {
             return;
         }
+
+        _playerData.matchmakingStatus = MatchmakingStatus.MatchFound.ToString();
+
+        OnPlayerDataChanged?.Invoke(this, EventArgs.Empty);
         
         try {
             // Update lobby with connection information

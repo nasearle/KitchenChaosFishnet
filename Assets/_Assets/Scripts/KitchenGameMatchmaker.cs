@@ -11,26 +11,32 @@ public class KitchenGameMatchmaker : MonoBehaviour {
 
     public static KitchenGameMatchmaker Instance { get; private set; }
 
+    public event EventHandler OnFindMatchStarted;
+    public event EventHandler OnFindMatchFailed;
+    public event EventHandler OnCancelFindMatchStarted;
+    public event EventHandler OnCancelFindMatchFailed;
+    public event EventHandler OnCancelFindMatchSucceeded;
+
     [Serializable]
     public class MatchmakingPlayerData {
         public int Skill;
         public int ColorId;
     }
 
-    private CreateTicketResponse createTicketResponse;
-    private float pollTicketTimer;
-    private float pollTicketTimerMax = 1.1f;
+    private CreateTicketResponse _createTicketResponse;
+    private float _pollTicketTimer;
+    private float _pollTicketTimerMax = 1.1f;
 
     private void Awake() {
         Instance = this;
     }
 
     private void Update() {
-        if (createTicketResponse != null) {
+        if (_createTicketResponse != null) {
             // Has ticket
-            pollTicketTimer -= Time.deltaTime;
-            if (pollTicketTimer <= 0f) {
-                pollTicketTimer = pollTicketTimerMax;
+            _pollTicketTimer -= Time.deltaTime;
+            if (_pollTicketTimer <= 0f) {
+                _pollTicketTimer = _pollTicketTimerMax;
 
                 PollMatchmakerTicket();
             }
@@ -67,23 +73,41 @@ public class KitchenGameMatchmaker : MonoBehaviour {
         return players;
     }
 
+    public async void CancelMatchmaking() {
+        if (_createTicketResponse != null) {
+            OnCancelFindMatchStarted?.Invoke(this, EventArgs.Empty);
+
+            try {
+                await MatchmakerService.Instance.DeleteTicketAsync(_createTicketResponse.Id);
+                _createTicketResponse = null;
+                Debug.Log("Matchmaking cancelled successfully.");
+
+                OnCancelFindMatchSucceeded?.Invoke(this, EventArgs.Empty);
+            } catch (Exception e) {
+                Debug.LogError($"Failed to delete matchmaking ticket: {e.Message}");
+
+                OnCancelFindMatchFailed?.Invoke(this, EventArgs.Empty);
+            }
+        }
+    }
+
     public async void FindMatch() {
         Debug.Log("FindMatch");
 
-        // lookingForMatchTransform.gameObject.SetActive(true);
+        OnFindMatchStarted?.Invoke(this, EventArgs.Empty);
 
-        createTicketResponse = await MatchmakerService.Instance.CreateTicketAsync(
+        _createTicketResponse = await MatchmakerService.Instance.CreateTicketAsync(
             GetMatchmakingPlayers(),
             new CreateTicketOptions { QueueName = DEFAULT_QUEUE }
         );
 
         // Wait a bit, don't poll right away
-        pollTicketTimer = pollTicketTimerMax;
+        _pollTicketTimer = _pollTicketTimerMax;
     }
 
     private async void PollMatchmakerTicket() {
         Debug.Log("PollMatchmakerTicket");
-        TicketStatusResponse ticketStatusResponse = await MatchmakerService.Instance.GetTicketAsync(createTicketResponse.Id);
+        TicketStatusResponse ticketStatusResponse = await MatchmakerService.Instance.GetTicketAsync(_createTicketResponse.Id);
 
         if (ticketStatusResponse == null) {
             // Null means no updates to this ticket, keep waiting
@@ -99,7 +123,7 @@ public class KitchenGameMatchmaker : MonoBehaviour {
             Debug.Log("multiplayAssignment.Status " + multiplayAssignment.Status);
             switch (multiplayAssignment.Status) {
                 case MultiplayAssignment.StatusOptions.Found:
-                    createTicketResponse = null;
+                    _createTicketResponse = null;
 
                     Debug.Log(multiplayAssignment.Ip + " " + multiplayAssignment.Port);
 
@@ -122,14 +146,18 @@ public class KitchenGameMatchmaker : MonoBehaviour {
                     // Still waiting...
                     break;
                 case MultiplayAssignment.StatusOptions.Failed:
-                    createTicketResponse = null;
+                    _createTicketResponse = null;
                     Debug.Log("Failed to create Multiplay server!");
-                    // lookingForMatchTransform.gameObject.SetActive(false);
+
+                    OnFindMatchFailed?.Invoke(this, EventArgs.Empty);
+
                     break;
                 case MultiplayAssignment.StatusOptions.Timeout:
-                    createTicketResponse = null;
+                    _createTicketResponse = null;
                     Debug.Log("Multiplay Timeout!");
-                    // lookingForMatchTransform.gameObject.SetActive(false);
+
+                    OnFindMatchFailed?.Invoke(this, EventArgs.Empty);
+
                     break;
             }
         }
