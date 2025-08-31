@@ -17,7 +17,7 @@ public class InitializeUnityGamingServices : MonoBehaviour {
     private async void InitializeUnityAuthentication() {
         Debug.Log("InitializeUnityAuthentication");
 
-        if (UnityServices.State != ServicesInitializationState.Initialized) {
+        if (!IsInitialized()) {
             Debug.Log("InitializeUnityAuthentication initializing");            
 
             InitializationOptions initializationOptions = new InitializationOptions();
@@ -27,12 +27,20 @@ public class InitializeUnityGamingServices : MonoBehaviour {
 #endif
 
             await UnityServices.InitializeAsync(initializationOptions);
+        }
 
-#if !UNITY_SERVER
-            await AuthenticationService.Instance.SignInAnonymouslyAsync();              
-#endif
+        if (!IsSignedIn()) {
+            await AuthenticationService.Instance.SignInAnonymouslyAsync();
         }
 
         OnInitialized?.Invoke(this, EventArgs.Empty);
+    }
+
+    public bool IsInitialized() {
+        return UnityServices.State == ServicesInitializationState.Initialized;
+    }
+
+    public bool IsSignedIn() {
+        return AuthenticationService.Instance.IsSignedIn;
     }
 }

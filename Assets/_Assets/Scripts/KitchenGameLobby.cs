@@ -13,7 +13,7 @@ using Unity.Services.Matchmaker.Models;
 using UnityEngine;
 
 public class KitchenGameLobby : MonoBehaviour {
-    private const int MAX_PLAYER_AMOUNT = 4;
+    public const int MAX_PLAYER_AMOUNT = 4;
 
     public static KitchenGameLobby Instance { get; private set; }
     private const string PLAYER_PREFS_PLAYER_NAME = "PlayerName";
@@ -40,6 +40,7 @@ public class KitchenGameLobby : MonoBehaviour {
     [SerializeField] private List<Color> playerColorList;
 
     private Lobby _joinedLobby;
+    private Lobby _relayJoinCodeLobby;
     private ILobbyEvents _lobbyEvents;
     private LobbyEventCallbacks _lobbyEventCallbacks;
     private float _heartbeatTimer;
@@ -52,6 +53,7 @@ public class KitchenGameLobby : MonoBehaviour {
         public const string MatchmakingStatus = "MatchmakingStatus";
         public const string ServerIp = "ServerIp";
         public const string ServerPort = "ServerPort";
+        public const string RelayJoinCode = "RelayJoinCode";
     }
 
     public enum MatchmakingStatus {
@@ -277,6 +279,22 @@ public class KitchenGameLobby : MonoBehaviour {
         }
     }
 
+#if UNITY_SERVER
+    public async Task CreateRelayJoinCodeLobby(string lobbyName, string relayJoinCode) {
+        try {
+            CreateLobbyOptions options = new CreateLobbyOptions();
+            options.IsPrivate = false;
+            options.Data = new Dictionary<string, DataObject> {
+                { LobbyDataKeys.RelayJoinCode , new DataObject(DataObject.VisibilityOptions.Member, relayJoinCode) }
+            };
+
+            _relayJoinCodeLobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, MAX_PLAYER_AMOUNT, options);
+        } catch (LobbyServiceException e) {
+            Debug.Log(e);
+        }
+    }
+#endif
+
     public async Task CreateLobby(string lobbyName, bool isPrivate) {
         // Only create a lobby if we're not already in one.
         if (_joinedLobby != null) {
@@ -335,6 +353,31 @@ public class KitchenGameLobby : MonoBehaviour {
             // TODO: could pass e.Message to the event to tell the player the
             // reason for the failure. E.g. "lobby is full"
             OnLobbyJoinFailed?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    public async Task<Lobby> JoinWithId(string lobbyId) {
+        try {
+            return await LobbyService.Instance.JoinLobbyByIdAsync(lobbyId);
+        } catch (LobbyServiceException e) {
+            Debug.Log(e);
+            return default;
+        }
+    }
+
+    public async Task<QueryResponse> QueryForRelayJoinCodeLobby(string lobbyName) {
+        try {
+            QueryLobbiesOptions queryLobbiesOptions = new QueryLobbiesOptions {
+                Count = 1,
+                Filters = new List<QueryFilter> {
+                    new QueryFilter(QueryFilter.FieldOptions.Name, lobbyName, QueryFilter.OpOptions.EQ)
+                }
+            };
+            QueryResponse queryResponse = await LobbyService.Instance.QueryLobbiesAsync(queryLobbiesOptions);
+            return queryResponse;
+        } catch (LobbyServiceException e) {
+            Debug.Log(e);
+            return default;
         }
     }
 
@@ -495,7 +538,7 @@ public class KitchenGameLobby : MonoBehaviour {
         await LobbyService.Instance.UpdateLobbyAsync(_joinedLobby.Id, options);
     }
 
-    public async void SetLobbyMatchFoundDetails(MultiplayAssignment assignment) {
+    public async void SetLobbyMatchFoundDetails(string relayJoinCode) {
         if (_joinedLobby == null || !IsLocalPlayerLobbyHost()) {
             return;
         }
@@ -508,8 +551,9 @@ public class KitchenGameLobby : MonoBehaviour {
             // Update lobby with connection information
             var lobbyData = new Dictionary<string, DataObject> {
                 {LobbyDataKeys.MatchmakingStatus, new DataObject(DataObject.VisibilityOptions.Member, MatchmakingStatus.MatchFound.ToString())},
-                {LobbyDataKeys.ServerIp, new DataObject(DataObject.VisibilityOptions.Member, assignment.Ip)},
-                {LobbyDataKeys.ServerPort, new DataObject(DataObject.VisibilityOptions.Member, assignment.Port.ToString())},
+                {LobbyDataKeys.RelayJoinCode, new DataObject(DataObject.VisibilityOptions.Member, relayJoinCode)},
+                // {LobbyDataKeys.ServerIp, new DataObject(DataObject.VisibilityOptions.Member, assignment.Ip)},
+                // {LobbyDataKeys.ServerPort, new DataObject(DataObject.VisibilityOptions.Member, assignment.Port.ToString())},
                 // {"matchId", new DataObject(DataObject.VisibilityOptions.Member, assignment.MatchId)},
                 // {"gameServerUrl", new DataObject(DataObject.VisibilityOptions.Member, $"{assignment.Ip}:{assignment.Port}")},
             };

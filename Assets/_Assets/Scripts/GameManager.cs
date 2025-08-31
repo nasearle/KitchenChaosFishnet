@@ -8,7 +8,9 @@ using FishNet.Managing.Scened;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using FishNet.Transporting;
+#if UNITY_SERVER
 using Unity.Services.Multiplay;
+#endif
 using UnityEngine;
 using UnityEngine.Serialization;
 

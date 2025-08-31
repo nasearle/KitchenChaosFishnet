@@ -1,9 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Unity.Services.Authentication;
 using Unity.Services.Lobbies.Models;
 using Unity.Services.Matchmaker;
 using Unity.Services.Matchmaker.Models;
+using Unity.Services.Relay;
+using Unity.Services.Relay.Models;
 using UnityEngine;
 
 public class KitchenGameMatchmaker : MonoBehaviour {
@@ -117,7 +121,6 @@ public class KitchenGameMatchmaker : MonoBehaviour {
 
         // Not null means there is an update to the ticket
         if (ticketStatusResponse.Type == typeof(MultiplayAssignment)) {
-            // It's a Multiplay assignment
             MultiplayAssignment multiplayAssignment = ticketStatusResponse.Value as MultiplayAssignment;
 
             Debug.Log("multiplayAssignment.Status " + multiplayAssignment.Status);
@@ -127,17 +130,24 @@ public class KitchenGameMatchmaker : MonoBehaviour {
 
                     Debug.Log(multiplayAssignment.Ip + " " + multiplayAssignment.Port);
 
-                    string ipv4Address = multiplayAssignment.Ip;
-                    ushort port = (ushort)multiplayAssignment.Port;
+                    // string ipv4Address = multiplayAssignment.Ip;
+                    // ushort port = (ushort)multiplayAssignment.Port;
+
+                    // query the lobbies with the matchId
+                    QueryResponse queryResponse = await KitchenGameLobby.Instance.QueryForRelayJoinCodeLobby(multiplayAssignment.MatchId);
+
+                    // get the relay join code
+                    Lobby relayJoinCodeLobby = await KitchenGameLobby.Instance.JoinWithId(queryResponse.Results.First().Id);
+                    string relayJoinCode = relayJoinCodeLobby.Data[KitchenGameLobby.LobbyDataKeys.RelayJoinCode].Value;
 
                     // Could fire an event with the data to de-couple the two
                     // scripts, but this is easier for now.
                     if (KitchenGameLobby.Instance.GetLobby() != null) {
                         // Automatically sets the connection data and starts the
                         // connection for all players in the lobby
-                        KitchenGameLobby.Instance.SetLobbyMatchFoundDetails(multiplayAssignment);
+                        KitchenGameLobby.Instance.SetLobbyMatchFoundDetails(relayJoinCode);
                     } else {
-                        LobbyPlayerConnection.Instance.SetConnectionData(ipv4Address, port);
+                        await LobbyPlayerConnection.Instance.SetConnectionData(relayJoinCode);
                         LobbyPlayerConnection.Instance.StartClient();
                     }
                     

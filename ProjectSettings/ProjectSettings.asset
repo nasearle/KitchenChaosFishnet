@@ -822,6 +822,7 @@ PlayerSettings:
   scriptingDefineSymbols:
     Server: FISHNET;FISHNET_V4
     Standalone: FISHNET;FISHNET_V4;LOCAL_CLIENT_DEV
+    WebGL: FISHNET;FISHNET_V4
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend:

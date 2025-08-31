@@ -1,18 +1,24 @@
+using UnityEngine;
+
+#if UNITY_SERVER
 using System;
+using System.Threading.Tasks;
 using FishNet;
 using FishNet.Managing;
 using FishNet.Transporting;
-using Unity.Services.Core;
+using FishNet.Transporting.UTP;
+using Unity.Services.Matchmaker.Models;
 using Unity.Services.Multiplay;
-using UnityEngine;
+using Unity.Services.Relay;
+using Unity.Services.Relay.Models;
+#endif
 
 public class KitchenGameDedicatedServer : MonoBehaviour {
 #if UNITY_SERVER
     public static KitchenGameDedicatedServer Instance { get; private set; }
     public static IServerQueryHandler serverQueryHandler; // static so it doesn't get destroyed when this object is destroyed
-    private float _autoAllocateTimer = 9999999f;
     private bool _alreadyAutoAllocated;
-    private bool _addressAndPortSet;
+    private bool _serverSetUpComplete;
     private NetworkManager _networkManager;
 
     private void Awake() {
@@ -25,11 +31,17 @@ public class KitchenGameDedicatedServer : MonoBehaviour {
         _networkManager.ServerManager.OnServerConnectionState += ServerManagerOnServerConnectionState;
     }
 
-    private void ServerManagerOnServerConnectionState(ServerConnectionStateArgs stateArgs) {
+    private async void ServerManagerOnServerConnectionState(ServerConnectionStateArgs stateArgs) {
         if (stateArgs.ConnectionState == LocalConnectionState.Started) {
             Debug.Log("DEDICATED_SERVER LOBBY CONNECTION STARTED");
 
-            if (_addressAndPortSet) {
+            if (_serverSetUpComplete) {
+                try {
+                    await MultiplayService.Instance.ReadyServerForPlayersAsync();
+                } catch (Exception e) {
+                    Debug.LogError($"Error in ServerManagerOnServerConnectionState: {e}");
+                }
+
                 Debug.Log("DEDICATED_SERVER Loading the GameScene...");
                 Loader.LoadNetwork(Loader.Scene.GameScene);
             }
@@ -37,19 +49,11 @@ public class KitchenGameDedicatedServer : MonoBehaviour {
     }
 
     private void Start() {
-        if (UnityServices.State == ServicesInitializationState.Initialized) {
+        if (InitializeUnityGamingServices.Instance.IsInitialized() &&
+            InitializeUnityGamingServices.Instance.IsSignedIn()) {
             InitializeUnityGamingServicesOnInitialized(this, EventArgs.Empty);
         } else {
             InitializeUnityGamingServices.Instance.OnInitialized += InitializeUnityGamingServicesOnInitialized;
-        }
-    }
-
-    private void Update() {
-        // TODO: remove this
-        _autoAllocateTimer -= Time.deltaTime;
-        if (_autoAllocateTimer <= 0f) {
-            _autoAllocateTimer = 999f;
-            MultiplayEventCallbacks_Allocate(null);
         }
     }
 
@@ -69,6 +73,29 @@ public class KitchenGameDedicatedServer : MonoBehaviour {
         if (serverConfig.AllocationId != "") {
             // Already Allocated
             MultiplayEventCallbacks_Allocate(new MultiplayAllocation("", serverConfig.ServerId, serverConfig.AllocationId));
+        }
+    }
+
+    private async Task<Allocation> AllocateRelay() {
+        try {
+            Allocation allocation = await RelayService.Instance.CreateAllocationAsync(KitchenGameLobby.MAX_PLAYER_AMOUNT);
+            
+            return allocation;
+        } catch (RelayServiceException e) {
+            Debug.Log(e);
+
+            return default;
+        }
+    }
+
+    private async Task<string> GetRelayJoinCode(Allocation allocation) {
+        try {
+            string relayJoinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
+
+            return relayJoinCode;
+        } catch (RelayServiceException e) {
+            Debug.Log(e);
+            return default;
         }
     }
 
@@ -103,24 +130,35 @@ public class KitchenGameDedicatedServer : MonoBehaviour {
         Debug.Log($"QueryPort[{serverConfig.QueryPort}]");
         Debug.Log($"LogDirectory[{serverConfig.ServerLogDirectory}]");
 
-        string ipv4Address = "0.0.0.0";
-        ushort port = serverConfig.Port;
+        // string ipv4Address = "0.0.0.0";
+        // ushort port = serverConfig.Port;
+
+        // Allocate the relay server and get the join code
+        Allocation relayAllocation = await AllocateRelay();
+        string relayJoinCode = await GetRelayJoinCode(relayAllocation);
+
+        // Get the matchmaking results
+        MatchmakingResults matchmakingResults = await MultiplayService.Instance.GetPayloadAllocationFromJsonAs<MatchmakingResults>();
         
-        Debug.Log($"DEDICATED_SERVER setting TransportManager ipv4Address to {ipv4Address}");
-        _networkManager.TransportManager.Transport.SetServerBindAddress(ipv4Address, IPAddressType.IPv4);
-        Debug.Log($"DEDICATED_SERVER setting TransportManager port to {port}");
-        _networkManager.TransportManager.Transport.SetPort(port);
+        // Add the relay join code to a public lobby with name = matchId.
+        await KitchenGameLobby.Instance.CreateRelayJoinCodeLobby(matchmakingResults.MatchId, relayJoinCode);
 
-        _addressAndPortSet = true;
+        // Set connection details on the transport
+        var unityTransport = _networkManager.TransportManager.GetTransport<UnityTransport>();
+        unityTransport.SetRelayServerData(AllocationUtils.ToRelayServerData(relayAllocation, "wss"));
+        unityTransport.UseWebSockets = true;
+        
+        // Start server
+        
+        // Debug.Log($"DEDICATED_SERVER setting TransportManager ipv4Address to {ipv4Address}");
+        // _networkManager.TransportManager.Transport.SetServerBindAddress(ipv4Address, IPAddressType.IPv4);
+        // Debug.Log($"DEDICATED_SERVER setting TransportManager port to {port}");
+        // _networkManager.TransportManager.Transport.SetPort(port);
 
-        Debug.Log("DEDICATED_SERVER STARTING CONNECTION MANUALLY");
+        _serverSetUpComplete = true;
+
+        Debug.Log("DEDICATED_SERVER STARTING CONNECTION");
         _networkManager.ServerManager.StartConnection();
-
-        try {
-            await MultiplayService.Instance.ReadyServerForPlayersAsync();
-        } catch (Exception e) {
-            Debug.LogError($"Error in MultiplayEventCallbacks_Allocate: {e}");
-        }
     }
 
     private void OnDestroy() {
