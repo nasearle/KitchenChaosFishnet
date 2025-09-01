@@ -11,6 +11,7 @@ using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
 using Unity.Services.Matchmaker.Models;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class KitchenGameLobby : MonoBehaviour {
     public const int MAX_PLAYER_AMOUNT = 4;
@@ -46,6 +47,11 @@ public class KitchenGameLobby : MonoBehaviour {
     private float _heartbeatTimer;
     private PlayerData _playerData;
     private NetworkManager _networkManager;
+    private float _updateLobbyCooldownTimer = 0f;
+    private float _updateLobbyCooldownTimerMax = 1.1f;
+    private float _updatePlayersCooldownTimer = 0f;
+    private float _updatePlayersCooldownTimerMax = 1.1f;
+
 
     public static class LobbyDataKeys {
         public const string ColorId = "ColorId";
@@ -71,7 +77,9 @@ public class KitchenGameLobby : MonoBehaviour {
         _networkManager = InstanceFinder.NetworkManager;
         _networkManager.ServerManager.OnRemoteConnectionState += ServerManagerOnRemoteConnectionState;
 
-        _playerData = new PlayerData();
+        _playerData = new PlayerData() {
+            matchmakingStatus = MatchmakingStatus.Waiting.ToString()
+        };
 
         _playerData.playerName = PlayerPrefs.GetString(PLAYER_PREFS_PLAYER_NAME, "PlayerName" + UnityEngine.Random.Range(100, 1000));
     }
@@ -103,35 +111,42 @@ public class KitchenGameLobby : MonoBehaviour {
         }
     }
 
-    private async void KitchenGameMatchmakerOnCancelFindMatchFailed(object sender, EventArgs e) {
-        await SetPlayerMatchmakingStatus(MatchmakingStatus.Searching);
+    private void KitchenGameMatchmakerOnCancelFindMatchFailed(object sender, EventArgs e) {
+        SetPlayerMatchmakingStatus(MatchmakingStatus.Searching);
     }
 
-    private async void KitchenGameMatchmakerOnCancelFindMatchSucceeded(object sender, EventArgs e) {
-        await SetPlayerMatchmakingStatus(MatchmakingStatus.Waiting);
+    private void KitchenGameMatchmakerOnCancelFindMatchSucceeded(object sender, EventArgs e) {
+        SetPlayerMatchmakingStatus(MatchmakingStatus.Waiting);
     }
 
     private void KitchenGameMatchmakerOnCancelFindMatchStarted(object sender, EventArgs e) {
-        // Only the local player needs to know about the cancelling status.
-        _playerData.matchmakingStatus = MatchmakingStatus.Cancelling.ToString();
-
-        OnPlayerDataChanged?.Invoke(this, EventArgs.Empty);
+        SetPlayerMatchmakingStatus(MatchmakingStatus.Cancelling);
     }
 
-    private async void KitchenGameMatchmakerOnFindMatchFailed(object sender, EventArgs e) {
-        await SetPlayerMatchmakingStatus(MatchmakingStatus.Waiting);
+    private void KitchenGameMatchmakerOnFindMatchFailed(object sender, EventArgs e) {
+        SetPlayerMatchmakingStatus(MatchmakingStatus.Waiting);
     }
 
-    private async void KitchenGameMatchmakerOnFindMatchStarted(object sender, EventArgs e) {
-        await SetPlayerMatchmakingStatus(MatchmakingStatus.Searching);
+    private void KitchenGameMatchmakerOnFindMatchStarted(object sender, EventArgs e) {
+        SetPlayerMatchmakingStatus(MatchmakingStatus.Searching);
     }
 
     private void InitializeUnityGamingServicesOnInitialized(object sender, EventArgs e) {
         OnUnityGamingServicesInitialized?.Invoke(this, EventArgs.Empty);
     }
 
-    void Update() {
+    private void Update() {
+#if !UNITY_SERVER
         HandleHeartbeat();
+
+        if (_joinedLobby != null && SceneManager.GetActiveScene().name == Loader.Scene.LobbyScene.ToString()) {
+            if (IsLocalPlayerLobbyHost()) {
+                HandleLobbyUpdates();
+            }
+            
+            HandlePlayerLobbyUpdates();
+        }
+#endif
 
 #if UNITY_SERVER
         if (KitchenGameDedicatedServer.serverQueryHandler != null) {
@@ -141,6 +156,58 @@ public class KitchenGameLobby : MonoBehaviour {
             KitchenGameDedicatedServer.serverQueryHandler.UpdateServerCheck();
         }
 #endif
+    }
+
+    private void HandlePlayerLobbyUpdates() {
+        _updatePlayersCooldownTimer -= Time.deltaTime;
+        if (_updatePlayersCooldownTimer <= 0) {
+            var updateLobbyData = new Dictionary<string, PlayerDataObject> { };
+
+            Unity.Services.Lobbies.Models.Player lobbyPlayerData = GetLobbyPlayerDataForLocalPlayer();
+            int lobbyPlayerColorId = LobbyPlayerDataConverter.GetPlayerDataValue<int>(lobbyPlayerData, LobbyDataKeys.ColorId);
+            int playerDataColorId = GetPlayerColorId();
+
+            if (playerDataColorId != lobbyPlayerColorId) {
+                updateLobbyData.Add(LobbyDataKeys.ColorId, new PlayerDataObject (
+                        visibility: PlayerDataObject.VisibilityOptions.Member, 
+                        value: playerDataColorId.ToString()
+                    )
+                );
+            }
+
+            string lobbyPlayerName = LobbyPlayerDataConverter.GetPlayerDataValue(lobbyPlayerData, LobbyDataKeys.PlayerName);
+            string playerDataPlayerName = GetPlayerName();
+
+            if (playerDataPlayerName != lobbyPlayerName) {
+                updateLobbyData.Add(LobbyDataKeys.PlayerName, new PlayerDataObject (
+                        visibility: PlayerDataObject.VisibilityOptions.Member, 
+                        value: playerDataPlayerName
+                    )
+                );
+            }
+
+            if (updateLobbyData.Count != 0) {
+                SetLobbyPlayerData(updateLobbyData);
+                _updatePlayersCooldownTimer = _updatePlayersCooldownTimerMax;
+            } else {
+                _updatePlayersCooldownTimer = 0f;
+            }
+        }
+    }
+
+    private void HandleLobbyUpdates() {
+        _updateLobbyCooldownTimer -= Time.deltaTime;
+        if (_updateLobbyCooldownTimer <= 0f) {
+            string playerDataMatchmakingStatus = GetPlayerMatchmakingStatus();
+            string lobbyMatchmakingStatus = LobbyPlayerDataConverter.GetLobbyDataValue(_joinedLobby, LobbyDataKeys.MatchmakingStatus);
+            
+            if (playerDataMatchmakingStatus != lobbyMatchmakingStatus) {
+                SetLobbyMatchmakingStatus(playerDataMatchmakingStatus);
+                _updateLobbyCooldownTimer = _updateLobbyCooldownTimerMax;
+            } else {
+                _updateLobbyCooldownTimer = 0f;
+            }
+        }
     }
 
     private void HandleHeartbeat() {
@@ -154,6 +221,7 @@ public class KitchenGameLobby : MonoBehaviour {
             }
         }
     }
+
     public bool IsLocalPlayerLobbyHost() {
         return _joinedLobby != null && _joinedLobby.HostId == AuthenticationService.Instance.PlayerId;
     }
@@ -187,7 +255,6 @@ public class KitchenGameLobby : MonoBehaviour {
     }
 
     private async Task SubscribeToLobbyEvents() {
-        Debug.Log("SubscribeToLobbyEvents");
         _lobbyEventCallbacks = new LobbyEventCallbacks();
         _lobbyEventCallbacks.LobbyChanged += OnLobbyChanged;
         _lobbyEventCallbacks.KickedFromLobby += OnKickedFromLobby;
@@ -228,7 +295,8 @@ public class KitchenGameLobby : MonoBehaviour {
         OnLobbyLeaveSucceeded?.Invoke(this, EventArgs.Empty);
     }
 
-    private void OnLobbyChanged(ILobbyChanges changes) {        
+    private void OnLobbyChanged(ILobbyChanges changes) {
+#if DEBUG_LOBBY_EVENTS
         if (changes.HostId.Value != null) {
             Debug.Log($"HostId changed: {changes.HostId.Value}");
         }
@@ -248,6 +316,7 @@ public class KitchenGameLobby : MonoBehaviour {
         if (changes.Data.Value != null) {
             Debug.Log($"Lobby Data changed: {changes.Data.Value}");
         }
+#endif
 
         if (changes.LobbyDeleted) {
             // Handle lobby being deleted
@@ -301,10 +370,14 @@ public class KitchenGameLobby : MonoBehaviour {
             return;
         }
 
+
         OnLobbyCreateStarted?.Invoke(this, EventArgs.Empty);
         try {
             CreateLobbyOptions options = new CreateLobbyOptions();
             options.IsPrivate = isPrivate;
+            options.Data = new Dictionary<string, DataObject> {
+                {LobbyDataKeys.MatchmakingStatus, new DataObject(DataObject.VisibilityOptions.Member, MatchmakingStatus.Waiting.ToString())}
+            };
             options.Player = new Unity.Services.Lobbies.Models.Player(
                 id: AuthenticationService.Instance.PlayerId,
                 data: new Dictionary<string, PlayerDataObject> {
@@ -344,7 +417,7 @@ public class KitchenGameLobby : MonoBehaviour {
             await SubscribeToLobbyEvents();
 
             if (MoreThanOnePlayerHasColor(GetPlayerColorId())) {
-                await SetPlayerColor(GetFirstUnusedColorId());
+                SetPlayerColor(GetFirstUnusedColorId());
             }            
 
             OnLobbyJoinSucceeded?.Invoke(this, EventArgs.Empty);
@@ -440,17 +513,15 @@ public class KitchenGameLobby : MonoBehaviour {
         return _playerData.matchmakingStatus;
     }
 
-    public async Task SetPlayerName(string playerName) {
+    public void SetPlayerName(string playerName) {
         _playerData.playerName = playerName;
 
         PlayerPrefs.SetString(PLAYER_PREFS_PLAYER_NAME, playerName);
 
         OnPlayerDataChanged?.Invoke(this, EventArgs.Empty);
-
-        await SetLobbyPlayerName(playerName);
     }    
 
-    public async Task SetPlayerColor(int colorId) {
+    public void SetPlayerColor(int colorId) {
         if (!IsColorAvailable(colorId)) {
             return;
         }
@@ -458,62 +529,22 @@ public class KitchenGameLobby : MonoBehaviour {
         _playerData.colorId = colorId;
 
         OnPlayerDataChanged?.Invoke(this, EventArgs.Empty);
-
-        await SetLobbyPlayerColor(colorId);
     }    
 
-    public async Task SetPlayerMatchmakingStatus(MatchmakingStatus status) {
+    public void SetPlayerMatchmakingStatus(MatchmakingStatus status) {
         _playerData.matchmakingStatus = status.ToString();
 
         OnPlayerDataChanged?.Invoke(this, EventArgs.Empty);
-
-        await SetLobbyMatchmakingStatus(status);
     }
 
-    // TODO: limit the calls to this function otherwise will run into lobby
-    // rate limits
-    public async Task SetLobbyPlayerName(string playerName) {   
+    private async Task SetLobbyPlayerData(Dictionary<string, PlayerDataObject> data) {
         if (_joinedLobby == null) {
             return;
         }
 
         try {
             UpdatePlayerOptions options = new UpdatePlayerOptions {
-                Data = new Dictionary<string, PlayerDataObject> {
-                    {LobbyDataKeys.PlayerName, new PlayerDataObject (
-                        visibility: PlayerDataObject.VisibilityOptions.Member, 
-                        value: playerName
-                    )}
-                }
-            };
-            
-            await LobbyService.Instance.UpdatePlayerAsync(_joinedLobby.Id, 
-                AuthenticationService.Instance.PlayerId, 
-                options);
-        } catch (LobbyServiceException e) {
-            Debug.LogError($"Failed to update player name: {e}");
-        }
-    }
-
-    // TODO: limit the calls to this function otherwise will run into lobby
-    // rate limits
-    public async Task SetLobbyPlayerColor(int colorId) {      
-        if (_joinedLobby == null) {
-            return;
-        }
-
-        if (!IsColorAvailable(colorId)) {
-            return;
-        }
-
-        try {
-            UpdatePlayerOptions options = new UpdatePlayerOptions {
-                Data = new Dictionary<string, PlayerDataObject> {
-                    {LobbyDataKeys.ColorId, new PlayerDataObject (
-                        visibility: PlayerDataObject.VisibilityOptions.Member, 
-                        value: colorId.ToString()
-                    )}
-                }
+                Data = data
             };
             
             await LobbyService.Instance.UpdatePlayerAsync(_joinedLobby.Id, 
@@ -524,18 +555,22 @@ public class KitchenGameLobby : MonoBehaviour {
         }
     }
 
-    public async Task SetLobbyMatchmakingStatus(MatchmakingStatus status) {
+    public async Task SetLobbyMatchmakingStatus(string status) {
         if (_joinedLobby == null || !IsLocalPlayerLobbyHost()) {
             return;
         }
 
-        UpdateLobbyOptions options = new UpdateLobbyOptions {
-            Data = new Dictionary<string, DataObject> {
-                {LobbyDataKeys.MatchmakingStatus, new DataObject(DataObject.VisibilityOptions.Member, status.ToString())}
-            }
-        };
+        try {
+            UpdateLobbyOptions options = new UpdateLobbyOptions {
+                Data = new Dictionary<string, DataObject> {
+                    {LobbyDataKeys.MatchmakingStatus, new DataObject(DataObject.VisibilityOptions.Member, status)}
+                }
+            };
 
-        await LobbyService.Instance.UpdateLobbyAsync(_joinedLobby.Id, options);
+            await LobbyService.Instance.UpdateLobbyAsync(_joinedLobby.Id, options);
+        } catch (LobbyServiceException e) {
+            Debug.LogError($"Failed to update lobby with match data: {e}");
+        }
     }
 
     public async void SetLobbyMatchFoundDetails(string relayJoinCode) {
@@ -543,7 +578,7 @@ public class KitchenGameLobby : MonoBehaviour {
             return;
         }
 
-        _playerData.matchmakingStatus = MatchmakingStatus.MatchFound.ToString();
+        SetPlayerMatchmakingStatus(MatchmakingStatus.MatchFound);
 
         OnPlayerDataChanged?.Invoke(this, EventArgs.Empty);
         

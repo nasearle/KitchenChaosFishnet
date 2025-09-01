@@ -37,7 +37,8 @@ public class LobbyPlayer : MonoBehaviour {
         });
 
         UpdatePlayerLobbyUI();
-        UpdatePlayer();
+        UpdateLocalPlayer();
+        UpdateLobbyPlayer();
     }
 
     private void KitchenGameLobbyOnJoinedLobbyTopLevelDataChange(object sender, EventArgs e) {
@@ -52,16 +53,11 @@ public class LobbyPlayer : MonoBehaviour {
 
     private void KitchenGameLobbyOnLobbyLeaveSucceeded(object sender, EventArgs e) {
         UpdatePlayerLobbyUI();
-        UpdatePlayer();
+        UpdateLocalPlayer();
     }
 
     private void KitchenGameLobbyOnPlayerDataChanged(object sender, EventArgs e) {
-        Lobby joinedLobby = KitchenGameLobby.Instance.GetLobby();
-        if (joinedLobby != null) {
-            return;
-        }
-
-        UpdatePlayer();
+        UpdateLocalPlayer();
     }
 
     private void KitchenGameLobbyOnJoinedLobbyPlayerStatusChanged(object sender, EventArgs e) {
@@ -70,11 +66,13 @@ public class LobbyPlayer : MonoBehaviour {
 
     private void KitchenGameLobbyOnLobbyJoinSucceeded(object sender, EventArgs e) {
         UpdatePlayerLobbyUI();
-        UpdatePlayer();
+        UpdateLocalPlayer();
+        UpdateLobbyPlayer();
     }
 
     private void KitchenGameLobbyOnJoinedLobbyAnyChange(object sender, EventArgs e) {
-        UpdatePlayer();
+        UpdateLocalPlayer();
+        UpdateLobbyPlayer();
     }
 
     private void UpdatePlayerLobbyUI() {
@@ -138,31 +136,48 @@ public class LobbyPlayer : MonoBehaviour {
             leaveButton.gameObject.SetActive(false);
         }
     }
-
-    private void UpdatePlayer() {
+    
+    private void UpdateLocalPlayer() {
         Lobby joinedLobby = KitchenGameLobby.Instance.GetLobby();
         if (joinedLobby != null) {
             if (KitchenGameLobby.Instance.IsPlayerIndexConnected(playerIndex)) {
-                Show();
+                var lobbyPlayer = KitchenGameLobby.Instance.GetLobbyPlayerDataFromPlayerIndex(playerIndex);
+                if (KitchenGameLobby.Instance.LobbyPlayerIsLocalPlayer(lobbyPlayer)) {
+                    Show();
 
-                Unity.Services.Lobbies.Models.Player playerData = KitchenGameLobby.Instance.GetLobbyPlayerDataFromPlayerIndex(playerIndex);
-
-                playerNameText.text = LobbyPlayerDataConverter.GetPlayerDataValue(playerData, KitchenGameLobby.LobbyDataKeys.PlayerName);
-
-                int colorId = LobbyPlayerDataConverter.GetPlayerDataValue<int>(playerData, KitchenGameLobby.LobbyDataKeys.ColorId);
-
-                playerVisual.SetPlayerColor(KitchenGameLobby.Instance.GetPlayerColorByColorId(colorId));
-            } else {
-                Hide();
+                    PlayerData playerData = KitchenGameLobby.Instance.GetPlayerData();
+                    playerNameText.text = playerData.playerName;
+                    playerVisual.SetPlayerColor(KitchenGameLobby.Instance.GetPlayerColorByColorId(playerData.colorId));
+                }
             }
         } else {
-
             if (playerIndex == 0) {
                 Show();
 
                 PlayerData playerData = KitchenGameLobby.Instance.GetPlayerData();
                 playerNameText.text = playerData.playerName;
                 playerVisual.SetPlayerColor(KitchenGameLobby.Instance.GetPlayerColorByColorId(playerData.colorId));
+            } else {
+                Hide();
+            }
+        }
+    }
+
+    private void UpdateLobbyPlayer() {
+        Lobby joinedLobby = KitchenGameLobby.Instance.GetLobby();
+        if (joinedLobby != null) {
+            if (KitchenGameLobby.Instance.IsPlayerIndexConnected(playerIndex)) {
+                Unity.Services.Lobbies.Models.Player lobbyPlayer = KitchenGameLobby.Instance.GetLobbyPlayerDataFromPlayerIndex(playerIndex);
+
+                if (!KitchenGameLobby.Instance.LobbyPlayerIsLocalPlayer(lobbyPlayer)) {
+                    Show();
+
+                    playerNameText.text = LobbyPlayerDataConverter.GetPlayerDataValue(lobbyPlayer, KitchenGameLobby.LobbyDataKeys.PlayerName);
+
+                    int colorId = LobbyPlayerDataConverter.GetPlayerDataValue<int>(lobbyPlayer, KitchenGameLobby.LobbyDataKeys.ColorId);
+
+                    playerVisual.SetPlayerColor(KitchenGameLobby.Instance.GetPlayerColorByColorId(colorId));
+                }
             } else {
                 Hide();
             }

@@ -65,7 +65,7 @@ public class LobbyUI : MonoBehaviour {
             string currentName = KitchenGameLobby.Instance.GetPlayerName();
             
             if (newText != currentName) {
-                await KitchenGameLobby.Instance.SetPlayerName(newText);
+                KitchenGameLobby.Instance.SetPlayerName(newText);
             }
         });
     }
