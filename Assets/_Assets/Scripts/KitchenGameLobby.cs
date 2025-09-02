@@ -36,6 +36,7 @@ public class KitchenGameLobby : MonoBehaviour {
 
     // Event for local player data object that exists outside the lobby
     public event EventHandler OnPlayerDataChanged;
+    public event EventHandler OnPlayerMatchmakingStatusChanged;
     public event EventHandler OnUnityGamingServicesInitialized;
 
     [SerializeField] private List<Color> playerColorList;
@@ -602,7 +603,7 @@ public class KitchenGameLobby : MonoBehaviour {
     public void SetPlayerMatchmakingStatus(MatchmakingStatus status) {
         _playerData.matchmakingStatus = status.ToString();
 
-        OnPlayerDataChanged?.Invoke(this, EventArgs.Empty);
+        OnPlayerMatchmakingStatusChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private async Task SetLobbyPlayerData(Dictionary<string, PlayerDataObject> data) {
@@ -665,7 +666,7 @@ public class KitchenGameLobby : MonoBehaviour {
 
             SetPlayerMatchmakingStatus(MatchmakingStatus.MatchFound);
 
-            OnPlayerDataChanged?.Invoke(this, EventArgs.Empty);
+            OnPlayerMatchmakingStatusChanged?.Invoke(this, EventArgs.Empty);
         } catch (LobbyServiceException e) {
             Debug.LogError($"Failed to update lobby with match data: {e}");
         }

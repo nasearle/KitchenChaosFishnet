@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using TMPro;
 using Unity.Services.Lobbies.Models;
 using UnityEngine;
@@ -20,6 +22,9 @@ public class LobbyUI : MonoBehaviour {
 
     private float _copyLobbyCodeButtonTextTimer = 0f;
     private float _copyLobbyCodeButtonTextTimerMax = 3f;
+    private bool _findMatchButtonOnCoolDown;
+    private float _findMatchButtonCoolDownTimer = 0f;
+    private float _findMatchButtonCoolDownTimerMax = 2f;
 
     private void Start() {
         // Make all buttons not interactable initially
@@ -37,7 +42,7 @@ public class LobbyUI : MonoBehaviour {
         KitchenGameLobby.Instance.OnLobbyLeaveSucceeded += KitchenGameLobbyOnLobbyLeaveSucceeded;
         KitchenGameLobby.Instance.OnJoinedLobbyTopLevelDataChange += KitchenGameLobbyOnJoinedLobbyTopLevelDataChange;
         KitchenGameLobby.Instance.OnJoinedLobbyPlayerStatusChanged += KitchenGameLobbyOnJoinedLobbyPlayerStatusChanged;
-        KitchenGameLobby.Instance.OnPlayerDataChanged += KitchenGameLobbyOnPlayerDataChanged;
+        KitchenGameLobby.Instance.OnPlayerMatchmakingStatusChanged += KitchenGameLobbyOnPlayerMatchmakingStatusChanged;
 
         mainMenuButton.onClick.AddListener(async () => {
             await KitchenGameLobby.Instance.LeaveLobby();
@@ -61,7 +66,7 @@ public class LobbyUI : MonoBehaviour {
         findMatchButton.onClick.AddListener(FindMatch);
 
         playerNameInputField.text = KitchenGameLobby.Instance.GetPlayerName();
-        playerNameInputField.onDeselect.AddListener(async (string newText) => {
+        playerNameInputField.onDeselect.AddListener((string newText) => {
             string currentName = KitchenGameLobby.Instance.GetPlayerName();
             
             if (newText != currentName) {
@@ -75,6 +80,14 @@ public class LobbyUI : MonoBehaviour {
             _copyLobbyCodeButtonTextTimer -= Time.deltaTime;
             if (_copyLobbyCodeButtonTextTimer <= 0) {
                 copyLobbyCodeButtonText.text = "COPY";
+            }
+        }
+
+        if (_findMatchButtonOnCoolDown) {
+            _findMatchButtonCoolDownTimer -= Time.deltaTime;
+            if (!findMatchButton.interactable && _findMatchButtonCoolDownTimer <= 0) {
+                findMatchButton.interactable = true;
+                _findMatchButtonOnCoolDown = false;
             }
         }
     }
@@ -123,7 +136,7 @@ public class LobbyUI : MonoBehaviour {
         UpdateFindMatchUI();
     }
 
-    private void KitchenGameLobbyOnPlayerDataChanged(object sender, EventArgs e) {
+    private void KitchenGameLobbyOnPlayerMatchmakingStatusChanged(object sender, EventArgs e) {
         LocalUpdateFindMatchUI();
     }
 
@@ -132,11 +145,13 @@ public class LobbyUI : MonoBehaviour {
             case nameof(KitchenGameLobby.MatchmakingStatus.Waiting):
                 findMatchButtonText.text = "FIND MATCH";
                 findMatchButton.onClick.RemoveListener(CancelMatchmaking);
+                findMatchButton.onClick.RemoveListener(FindMatch);
                 findMatchButton.onClick.AddListener(FindMatch);
                 break;
             case nameof(KitchenGameLobby.MatchmakingStatus.Searching):
                 findMatchButtonText.text = "SEARCHING...";
                 findMatchButton.onClick.RemoveListener(FindMatch);
+                findMatchButton.onClick.RemoveListener(CancelMatchmaking);
                 findMatchButton.onClick.AddListener(CancelMatchmaking);
                 break;
             case nameof(KitchenGameLobby.MatchmakingStatus.Cancelling):
@@ -167,16 +182,27 @@ public class LobbyUI : MonoBehaviour {
         }
     }
 
-    private void FindMatch() {
+    private async void FindMatch() {
+        findMatchButton.interactable = false;
+
         if (KitchenGameLobby.Instance.GetLobby() == null || KitchenGameLobby.Instance.IsLocalPlayerLobbyHost()) {
-            KitchenGameMatchmaker.Instance.FindMatch();
+            await KitchenGameMatchmaker.Instance.FindMatchWithBackoff();
         }
+        
+        _findMatchButtonOnCoolDown = true;
+        _findMatchButtonCoolDownTimer = _findMatchButtonCoolDownTimerMax;
     }
 
-    private void CancelMatchmaking() {
+    private async void CancelMatchmaking() {
+        findMatchButton.interactable = false;
+
         if (KitchenGameLobby.Instance.GetLobby() == null || KitchenGameLobby.Instance.IsLocalPlayerLobbyHost()) {
-            KitchenGameMatchmaker.Instance.CancelMatchmaking();
+            // await KitchenGameMatchmaker.Instance.CancelMatchmaking();
+            await KitchenGameMatchmaker.Instance.CancelMatchmakingWithBackoff();
         }
+        
+        _findMatchButtonOnCoolDown = true;
+        _findMatchButtonCoolDownTimer = _findMatchButtonCoolDownTimerMax;
     }
 
     private void OnDestroy() {
@@ -185,6 +211,6 @@ public class LobbyUI : MonoBehaviour {
         KitchenGameLobby.Instance.OnLobbyLeaveSucceeded -= KitchenGameLobbyOnLobbyLeaveSucceeded;
         KitchenGameLobby.Instance.OnJoinedLobbyTopLevelDataChange -= KitchenGameLobbyOnJoinedLobbyTopLevelDataChange;
         KitchenGameLobby.Instance.OnJoinedLobbyPlayerStatusChanged -= KitchenGameLobbyOnJoinedLobbyPlayerStatusChanged;
-        KitchenGameLobby.Instance.OnPlayerDataChanged -= KitchenGameLobbyOnPlayerDataChanged;
+        KitchenGameLobby.Instance.OnPlayerMatchmakingStatusChanged -= KitchenGameLobbyOnPlayerMatchmakingStatusChanged;
     }
 }
