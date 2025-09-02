@@ -36,7 +36,9 @@ public class LobbyPlayerConnection : MonoBehaviour {
         string matchmakingStatus = LobbyPlayerDataConverter.GetLobbyDataValue(joinedLobby, KitchenGameLobby.LobbyDataKeys.MatchmakingStatus);
 
         if (matchmakingStatus == KitchenGameLobby.MatchmakingStatus.MatchFound.ToString()) {
+            Debug.Log("LobbyPlayerConnection Found match");
             string relayJoinCode = LobbyPlayerDataConverter.GetLobbyDataValue(joinedLobby, KitchenGameLobby.LobbyDataKeys.RelayJoinCode);
+            Debug.Log("LobbyPlayerConnection Got relay join code from the lobby: " + relayJoinCode);
             // string ipv4Address = LobbyPlayerDataConverter.GetLobbyDataValue(joinedLobby, KitchenGameLobby.LobbyDataKeys.ServerIp);
             // ushort port = LobbyPlayerDataConverter.GetLobbyDataValue<ushort>(joinedLobby, KitchenGameLobby.LobbyDataKeys.ServerPort);
             
@@ -56,11 +58,16 @@ public class LobbyPlayerConnection : MonoBehaviour {
     }
 
     public async Task SetConnectionData(string relayJoinCode) {
-        JoinAllocation joinAllocation = await JoinRelay(relayJoinCode);
+        try {
+            Debug.Log("LobbyPlayerConnection Joining the relay server with relay join code: " + relayJoinCode);
+            JoinAllocation joinAllocation = await JoinRelay(relayJoinCode);
 
-        var unityTransport = _networkManager.TransportManager.GetTransport<UnityTransport>();
-        unityTransport.SetRelayServerData(AllocationUtils.ToRelayServerData(joinAllocation, "wss"));
-        unityTransport.UseWebSockets = true;
+            var unityTransport = _networkManager.TransportManager.GetTransport<UnityTransport>();
+            unityTransport.SetRelayServerData(AllocationUtils.ToRelayServerData(joinAllocation, "wss"));
+            unityTransport.UseWebSockets = true;
+        } catch (RelayServiceException e) {
+            Debug.Log(e);
+        }
 
         // _networkManager.TransportManager.Transport.SetClientAddress(ipv4Address);
         // _networkManager.TransportManager.Transport.SetPort(port);

@@ -133,12 +133,16 @@ public class KitchenGameMatchmaker : MonoBehaviour {
                     // string ipv4Address = multiplayAssignment.Ip;
                     // ushort port = (ushort)multiplayAssignment.Port;
 
-                    // query the lobbies with the matchId
+                    Debug.Log("Querying for lobby with name == MatchId: " + multiplayAssignment.MatchId);
                     QueryResponse queryResponse = await KitchenGameLobby.Instance.QueryForRelayJoinCodeLobby(multiplayAssignment.MatchId);
 
-                    // get the relay join code
+                    Debug.Log("Found relay join code lobby with id: " + queryResponse.Results.First().Id);
                     Lobby relayJoinCodeLobby = await KitchenGameLobby.Instance.JoinWithId(queryResponse.Results.First().Id);
                     string relayJoinCode = relayJoinCodeLobby.Data[KitchenGameLobby.LobbyDataKeys.RelayJoinCode].Value;
+                    Debug.Log("Relay join code: " + relayJoinCode);
+
+                    Debug.Log("Leaving the relay join code lobby");
+                    await KitchenGameLobby.Instance.LeaveLobbyWithId(queryResponse.Results.First().Id);
 
                     // Could fire an event with the data to de-couple the two
                     // scripts, but this is easier for now.

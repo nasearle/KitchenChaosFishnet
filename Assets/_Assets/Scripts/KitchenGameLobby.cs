@@ -149,6 +149,8 @@ public class KitchenGameLobby : MonoBehaviour {
 #endif
 
 #if UNITY_SERVER
+        HandleRelayJoinCodeLobbyHeartbeat();
+
         if (KitchenGameDedicatedServer.serverQueryHandler != null) {
             if (_networkManager.IsServerStarted) {
                 KitchenGameDedicatedServer.serverQueryHandler.CurrentPlayers = (ushort)_networkManager.ServerManager.Clients.Keys.Count;
@@ -201,7 +203,8 @@ public class KitchenGameLobby : MonoBehaviour {
             string playerDataMatchmakingStatus = GetPlayerMatchmakingStatus();
             string lobbyMatchmakingStatus = LobbyPlayerDataConverter.GetLobbyDataValue(_joinedLobby, LobbyDataKeys.MatchmakingStatus);
             
-            if (playerDataMatchmakingStatus != lobbyMatchmakingStatus) {
+            // If the lobby is in the MatchFound state, don't update it.
+            if (playerDataMatchmakingStatus != lobbyMatchmakingStatus && lobbyMatchmakingStatus != MatchmakingStatus.MatchFound.ToString()) {
                 SetLobbyMatchmakingStatus(playerDataMatchmakingStatus);
                 _updateLobbyCooldownTimer = _updateLobbyCooldownTimerMax;
             } else {
@@ -254,18 +257,19 @@ public class KitchenGameLobby : MonoBehaviour {
         return player.Id == AuthenticationService.Instance.PlayerId;
     }
 
-    private async Task SubscribeToLobbyEvents() {
+    // Used on both the server and client
+    private async Task SubscribeToLobbyEvents(string lobbyId) {
         _lobbyEventCallbacks = new LobbyEventCallbacks();
         _lobbyEventCallbacks.LobbyChanged += OnLobbyChanged;
         _lobbyEventCallbacks.KickedFromLobby += OnKickedFromLobby;
 
         try {
-            _lobbyEvents = await LobbyService.Instance.SubscribeToLobbyEventsAsync(_joinedLobby.Id, _lobbyEventCallbacks);
+            _lobbyEvents = await LobbyService.Instance.SubscribeToLobbyEventsAsync(lobbyId, _lobbyEventCallbacks);
         }
         catch (LobbyServiceException ex)
         {
             switch (ex.Reason) {
-                case LobbyExceptionReason.AlreadySubscribedToLobby: Debug.LogWarning($"Already subscribed to lobby[{_joinedLobby.Id}]. We did not need to try and subscribe again. Exception Message: {ex.Message}"); break;
+                case LobbyExceptionReason.AlreadySubscribedToLobby: Debug.LogWarning($"Already subscribed to lobby[{lobbyId}]. We did not need to try and subscribe again. Exception Message: {ex.Message}"); break;
                 case LobbyExceptionReason.SubscriptionToLobbyLostWhileBusy: Debug.LogError($"Subscription to lobby events was lost while it was busy trying to subscribe. Exception Message: {ex.Message}"); throw;
                 case LobbyExceptionReason.LobbyEventServiceConnectionError: Debug.LogError($"Failed to connect to lobby events. Exception Message: {ex.Message}"); throw;
                 default: throw;
@@ -318,6 +322,14 @@ public class KitchenGameLobby : MonoBehaviour {
         }
 #endif
 
+#if UNITY_SERVER
+        if (changes.PlayerLeft.Value != null) {
+            Debug.Log("DEDICATED_SERVER Player left relay join code lobby");
+            DeleteRelayJoinCodeLobby();
+        }
+#endif
+
+#if !UNITY_SERVER
         if (changes.LobbyDeleted) {
             // Handle lobby being deleted
             // Calling changes.ApplyToLobby will log a warning and do nothing
@@ -346,10 +358,13 @@ public class KitchenGameLobby : MonoBehaviour {
                 OnJoinedLobbyTopLevelDataChange?.Invoke(this, EventArgs.Empty);
             }
         }
+#endif
     }
 
 #if UNITY_SERVER
     public async Task CreateRelayJoinCodeLobby(string lobbyName, string relayJoinCode) {
+        Debug.Log("DEDICATED_SERVER Creating relay join code lobby");
+
         try {
             CreateLobbyOptions options = new CreateLobbyOptions();
             options.IsPrivate = false;
@@ -358,8 +373,50 @@ public class KitchenGameLobby : MonoBehaviour {
             };
 
             _relayJoinCodeLobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, MAX_PLAYER_AMOUNT, options);
+            
+            Debug.Log("DEDICATED_SERVER Created relay join code lobby");
+
+            await SubscribeToLobbyEvents(_relayJoinCodeLobby.Id);
+
+            Debug.Log("DEDICATED_SERVER Subscribed to relay join code lobby events");
         } catch (LobbyServiceException e) {
             Debug.Log(e);
+        }
+    }
+
+    public async void DeleteRelayJoinCodeLobby() {
+        if (_relayJoinCodeLobby == null) {
+            return;
+        }
+
+        Debug.Log("DEDICATED_SERVER Deleting relay join code lobby");
+        await UnsubscribeFromLobbyEvents();
+
+        try {
+            await LobbyService.Instance.DeleteLobbyAsync(_relayJoinCodeLobby.Id);
+
+            _relayJoinCodeLobby = null;
+
+            Debug.Log("DEDICATED_SERVER Deleted relay join code lobby");
+        } catch (LobbyServiceException e) {
+            Debug.Log(e);
+        }
+    }
+
+    // This is actually not really needed since the lobby timeout is set to 30s 
+    // and the lobby is only needed for a few seconds to pass the relay join
+    // code to the client.
+    private void HandleRelayJoinCodeLobbyHeartbeat() {
+        if (_relayJoinCodeLobby == null) {
+            return;
+        }
+
+        _heartbeatTimer -= Time.deltaTime;
+        if (_heartbeatTimer <= 0f) {
+            float heartbeatTimerMax = 15f;
+            _heartbeatTimer = heartbeatTimerMax;
+
+            LobbyService.Instance.SendHeartbeatPingAsync(_relayJoinCodeLobby.Id);
         }
     }
 #endif
@@ -388,7 +445,7 @@ public class KitchenGameLobby : MonoBehaviour {
 
             OnLobbyJoinSucceeded?.Invoke(this, EventArgs.Empty);
 
-            await SubscribeToLobbyEvents();
+            await SubscribeToLobbyEvents(_joinedLobby.Id);
         } catch (LobbyServiceException e) {
             Debug.Log(e);
             OnLobbyCreateFailed?.Invoke(this, EventArgs.Empty);
@@ -414,7 +471,7 @@ public class KitchenGameLobby : MonoBehaviour {
                     {LobbyDataKeys.PlayerName, new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, GetPlayerName())}
             });
             _joinedLobby = await LobbyService.Instance.JoinLobbyByCodeAsync(lobbyCode, options);
-            await SubscribeToLobbyEvents();
+            await SubscribeToLobbyEvents(_joinedLobby.Id);
 
             if (MoreThanOnePlayerHasColor(GetPlayerColorId())) {
                 SetPlayerColor(GetFirstUnusedColorId());
@@ -438,6 +495,15 @@ public class KitchenGameLobby : MonoBehaviour {
         }
     }
 
+    public async Task LeaveLobbyWithId(string lobbyId) {
+        try {
+            await LobbyService.Instance.RemovePlayerAsync(lobbyId, AuthenticationService.Instance.PlayerId);
+            Debug.Log("Left the relay join code lobby");
+        } catch (LobbyServiceException e) {
+            Debug.Log(e);
+        }
+    }
+
     public async Task<QueryResponse> QueryForRelayJoinCodeLobby(string lobbyName) {
         try {
             QueryLobbiesOptions queryLobbiesOptions = new QueryLobbiesOptions {
@@ -456,6 +522,8 @@ public class KitchenGameLobby : MonoBehaviour {
 
     public async void DeleteLobby() {
         if (_joinedLobby != null && IsLocalPlayerLobbyHost()) {
+            await UnsubscribeFromLobbyEvents();
+
             try {
                 await LobbyService.Instance.DeleteLobbyAsync(_joinedLobby.Id);
 
@@ -577,10 +645,6 @@ public class KitchenGameLobby : MonoBehaviour {
         if (_joinedLobby == null || !IsLocalPlayerLobbyHost()) {
             return;
         }
-
-        SetPlayerMatchmakingStatus(MatchmakingStatus.MatchFound);
-
-        OnPlayerDataChanged?.Invoke(this, EventArgs.Empty);
         
         try {
             // Update lobby with connection information
@@ -598,6 +662,10 @@ public class KitchenGameLobby : MonoBehaviour {
             };
             
             await LobbyService.Instance.UpdateLobbyAsync(_joinedLobby.Id, options);
+
+            SetPlayerMatchmakingStatus(MatchmakingStatus.MatchFound);
+
+            OnPlayerDataChanged?.Invoke(this, EventArgs.Empty);
         } catch (LobbyServiceException e) {
             Debug.LogError($"Failed to update lobby with match data: {e}");
         }

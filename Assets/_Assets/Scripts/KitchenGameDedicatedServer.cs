@@ -77,9 +77,10 @@ public class KitchenGameDedicatedServer : MonoBehaviour {
     }
 
     private async Task<Allocation> AllocateRelay() {
+        Debug.Log("DEDICATED_SERVER Allocating relay");
         try {
             Allocation allocation = await RelayService.Instance.CreateAllocationAsync(KitchenGameLobby.MAX_PLAYER_AMOUNT);
-            
+            Debug.Log("DEDICATED_SERVER Allocated relay");
             return allocation;
         } catch (RelayServiceException e) {
             Debug.Log(e);
@@ -89,9 +90,10 @@ public class KitchenGameDedicatedServer : MonoBehaviour {
     }
 
     private async Task<string> GetRelayJoinCode(Allocation allocation) {
+        Debug.Log("DEDICATED_SERVER Getting relay join code");
         try {
             string relayJoinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
-
+            Debug.Log("DEDICATED_SERVER Got relay join code: " + relayJoinCode);
             return relayJoinCode;
         } catch (RelayServiceException e) {
             Debug.Log(e);
@@ -139,8 +141,12 @@ public class KitchenGameDedicatedServer : MonoBehaviour {
 
         // Get the matchmaking results
         MatchmakingResults matchmakingResults = await MultiplayService.Instance.GetPayloadAllocationFromJsonAs<MatchmakingResults>();
+
+        Debug.Log($"DEDICATED_SERVER matchmakingResults.MatchId: {matchmakingResults.MatchId}");
         
         // Add the relay join code to a public lobby with name = matchId.
+        Debug.Log("DEDICATED_SERVER Creating relay join code lobby with name: " + matchmakingResults.MatchId);
+        Debug.Log("DEDICATED_SERVER And adding the relay join code: " + relayJoinCode);
         await KitchenGameLobby.Instance.CreateRelayJoinCodeLobby(matchmakingResults.MatchId, relayJoinCode);
 
         // Set connection details on the transport
