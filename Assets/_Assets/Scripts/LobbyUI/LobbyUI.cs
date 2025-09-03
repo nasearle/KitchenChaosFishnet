@@ -1,7 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using TMPro;
 using Unity.Services.Lobbies.Models;
 using UnityEngine;
@@ -24,7 +21,7 @@ public class LobbyUI : MonoBehaviour {
     private float _copyLobbyCodeButtonTextTimerMax = 3f;
     private bool _findMatchButtonOnCoolDown;
     private float _findMatchButtonCoolDownTimer = 0f;
-    private float _findMatchButtonCoolDownTimerMax = 2f;
+    private float _findMatchButtonCoolDownTimerMax = 1.1f;
 
     private void Start() {
         // Make all buttons not interactable initially
@@ -54,7 +51,11 @@ public class LobbyUI : MonoBehaviour {
         });
 
         copyLobbyCodeButton.onClick.AddListener(() => {
+#if UNITY_WEBGL
+            WebGLCopyAndPaste.WebGLCopyAndPasteAPI.CopyToClipboard(joinCodeText.text);
+#else
             GUIUtility.systemCopyBuffer = joinCodeText.text;
+#endif
             copyLobbyCodeButtonText.text = "COPIED";
             _copyLobbyCodeButtonTextTimer = _copyLobbyCodeButtonTextTimerMax;
         });
@@ -66,7 +67,7 @@ public class LobbyUI : MonoBehaviour {
         findMatchButton.onClick.AddListener(FindMatch);
 
         playerNameInputField.text = KitchenGameLobby.Instance.GetPlayerName();
-        playerNameInputField.onDeselect.AddListener((string newText) => {
+        playerNameInputField.onEndEdit.AddListener((string newText) => {
             string currentName = KitchenGameLobby.Instance.GetPlayerName();
             
             if (newText != currentName) {
@@ -186,7 +187,7 @@ public class LobbyUI : MonoBehaviour {
         findMatchButton.interactable = false;
 
         if (KitchenGameLobby.Instance.GetLobby() == null || KitchenGameLobby.Instance.IsLocalPlayerLobbyHost()) {
-            await KitchenGameMatchmaker.Instance.FindMatchWithBackoff();
+            await KitchenGameMatchmaker.Instance.FindMatch();
         }
         
         _findMatchButtonOnCoolDown = true;
@@ -197,8 +198,7 @@ public class LobbyUI : MonoBehaviour {
         findMatchButton.interactable = false;
 
         if (KitchenGameLobby.Instance.GetLobby() == null || KitchenGameLobby.Instance.IsLocalPlayerLobbyHost()) {
-            // await KitchenGameMatchmaker.Instance.CancelMatchmaking();
-            await KitchenGameMatchmaker.Instance.CancelMatchmakingWithBackoff();
+            await KitchenGameMatchmaker.Instance.CancelMatchmaking();
         }
         
         _findMatchButtonOnCoolDown = true;

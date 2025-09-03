@@ -52,6 +52,8 @@ public class KitchenGameLobby : MonoBehaviour {
     private float _updateLobbyCooldownTimerMax = 1.1f;
     private float _updatePlayersCooldownTimer = 0f;
     private float _updatePlayersCooldownTimerMax = 1.1f;
+    private bool _isUpdatingLobbyPlayerData;
+    private bool _isUpdatingLobbyMatchmakingStatus;
 
 
     public static class LobbyDataKeys {
@@ -145,7 +147,7 @@ public class KitchenGameLobby : MonoBehaviour {
                 HandleLobbyUpdates();
             }
             
-            HandlePlayerLobbyUpdates();
+            HandleLobbyPlayerUpdates();
         }
 #endif
 
@@ -161,55 +163,59 @@ public class KitchenGameLobby : MonoBehaviour {
 #endif
     }
 
-    private void HandlePlayerLobbyUpdates() {
-        _updatePlayersCooldownTimer -= Time.deltaTime;
-        if (_updatePlayersCooldownTimer <= 0) {
-            var updateLobbyData = new Dictionary<string, PlayerDataObject> { };
+    private void HandleLobbyPlayerUpdates() {
+        if (!_isUpdatingLobbyPlayerData) {
+            _updatePlayersCooldownTimer -= Time.deltaTime;
+            if (_updatePlayersCooldownTimer <= 0) {
+                var updateLobbyData = new Dictionary<string, PlayerDataObject> { };
 
-            Unity.Services.Lobbies.Models.Player lobbyPlayerData = GetLobbyPlayerDataForLocalPlayer();
-            int lobbyPlayerColorId = LobbyPlayerDataConverter.GetPlayerDataValue<int>(lobbyPlayerData, LobbyDataKeys.ColorId);
-            int playerDataColorId = GetPlayerColorId();
+                Unity.Services.Lobbies.Models.Player lobbyPlayerData = GetLobbyPlayerDataForLocalPlayer();
+                int lobbyPlayerColorId = LobbyPlayerDataConverter.GetPlayerDataValue<int>(lobbyPlayerData, LobbyDataKeys.ColorId);
+                int playerDataColorId = GetPlayerColorId();
 
-            if (playerDataColorId != lobbyPlayerColorId) {
-                updateLobbyData.Add(LobbyDataKeys.ColorId, new PlayerDataObject (
-                        visibility: PlayerDataObject.VisibilityOptions.Member, 
-                        value: playerDataColorId.ToString()
-                    )
-                );
-            }
+                if (playerDataColorId != lobbyPlayerColorId) {
+                    updateLobbyData.Add(LobbyDataKeys.ColorId, new PlayerDataObject (
+                            visibility: PlayerDataObject.VisibilityOptions.Member, 
+                            value: playerDataColorId.ToString()
+                        )
+                    );
+                }
 
-            string lobbyPlayerName = LobbyPlayerDataConverter.GetPlayerDataValue(lobbyPlayerData, LobbyDataKeys.PlayerName);
-            string playerDataPlayerName = GetPlayerName();
+                string lobbyPlayerName = LobbyPlayerDataConverter.GetPlayerDataValue(lobbyPlayerData, LobbyDataKeys.PlayerName);
+                string playerDataPlayerName = GetPlayerName();
 
-            if (playerDataPlayerName != lobbyPlayerName) {
-                updateLobbyData.Add(LobbyDataKeys.PlayerName, new PlayerDataObject (
-                        visibility: PlayerDataObject.VisibilityOptions.Member, 
-                        value: playerDataPlayerName
-                    )
-                );
-            }
+                if (playerDataPlayerName != lobbyPlayerName) {
+                    updateLobbyData.Add(LobbyDataKeys.PlayerName, new PlayerDataObject (
+                            visibility: PlayerDataObject.VisibilityOptions.Member, 
+                            value: playerDataPlayerName
+                        )
+                    );
+                }
 
-            if (updateLobbyData.Count != 0) {
-                SetLobbyPlayerData(updateLobbyData);
-                _updatePlayersCooldownTimer = _updatePlayersCooldownTimerMax;
-            } else {
-                _updatePlayersCooldownTimer = 0f;
+                if (updateLobbyData.Count != 0) {
+                    SetLobbyPlayerData(updateLobbyData);
+                    _updatePlayersCooldownTimer = _updatePlayersCooldownTimerMax;
+                } else {
+                    _updatePlayersCooldownTimer = 0f;
+                }
             }
         }
     }
 
     private void HandleLobbyUpdates() {
-        _updateLobbyCooldownTimer -= Time.deltaTime;
-        if (_updateLobbyCooldownTimer <= 0f) {
-            string playerDataMatchmakingStatus = GetPlayerMatchmakingStatus();
-            string lobbyMatchmakingStatus = LobbyPlayerDataConverter.GetLobbyDataValue(_joinedLobby, LobbyDataKeys.MatchmakingStatus);
-            
-            // If the lobby is in the MatchFound state, don't update it.
-            if (playerDataMatchmakingStatus != lobbyMatchmakingStatus && lobbyMatchmakingStatus != MatchmakingStatus.MatchFound.ToString()) {
-                SetLobbyMatchmakingStatus(playerDataMatchmakingStatus);
-                _updateLobbyCooldownTimer = _updateLobbyCooldownTimerMax;
-            } else {
-                _updateLobbyCooldownTimer = 0f;
+        if (!_isUpdatingLobbyMatchmakingStatus) {
+            _updateLobbyCooldownTimer -= Time.deltaTime;
+            if (_updateLobbyCooldownTimer <= 0f) {
+                string playerDataMatchmakingStatus = GetPlayerMatchmakingStatus();
+                string lobbyMatchmakingStatus = LobbyPlayerDataConverter.GetLobbyDataValue(_joinedLobby, LobbyDataKeys.MatchmakingStatus);
+                
+                // If the lobby is in the MatchFound state, don't update it.
+                if (playerDataMatchmakingStatus != lobbyMatchmakingStatus && lobbyMatchmakingStatus != MatchmakingStatus.MatchFound.ToString()) {
+                    SetLobbyMatchmakingStatus(playerDataMatchmakingStatus);
+                    _updateLobbyCooldownTimer = _updateLobbyCooldownTimerMax;
+                } else {
+                    _updateLobbyCooldownTimer = 0f;
+                }
             }
         }
     }
@@ -279,8 +285,12 @@ public class KitchenGameLobby : MonoBehaviour {
     }
 
     private async Task UnsubscribeFromLobbyEvents() {
-        _lobbyEventCallbacks.LobbyChanged -= OnLobbyChanged;
-        _lobbyEventCallbacks.KickedFromLobby -= OnKickedFromLobby;
+        if (_lobbyEventCallbacks != null) {
+            _lobbyEventCallbacks.LobbyChanged -= OnLobbyChanged;
+            _lobbyEventCallbacks.KickedFromLobby -= OnKickedFromLobby;
+            _lobbyEventCallbacks = null;
+        }
+        
         if (_lobbyEvents != null) {
             try {
                 await _lobbyEvents.UnsubscribeAsync();
@@ -357,6 +367,15 @@ public class KitchenGameLobby : MonoBehaviour {
 
             if (changes.Data.Value != null) {
                 OnJoinedLobbyTopLevelDataChange?.Invoke(this, EventArgs.Empty);
+            }
+
+            if (changes.PlayerLeft.Value != null) {
+                Debug.Log("OnLobbyChanged PLAYER LEFT");
+                if (GetLobby() == null || IsLocalPlayerLobbyHost()) {
+                    Debug.Log("OnLobbyChanged is party leader. Cancelling Matchmaking...");
+
+                    KitchenGameMatchmaker.Instance.CancelMatchmaking();
+                }
             }
         }
 #endif
@@ -538,6 +557,7 @@ public class KitchenGameLobby : MonoBehaviour {
     // Note the lobby is automatically deleted when the last player leaves the lobby
     public async Task LeaveLobby() {
         await UnsubscribeFromLobbyEvents();
+
         if (_joinedLobby != null) {
             OnLobbyLeaveStarted?.Invoke(this, EventArgs.Empty);
             try {
@@ -607,9 +627,11 @@ public class KitchenGameLobby : MonoBehaviour {
     }
 
     private async Task SetLobbyPlayerData(Dictionary<string, PlayerDataObject> data) {
-        if (_joinedLobby == null) {
+        if (_joinedLobby == null || _isUpdatingLobbyPlayerData) {
             return;
         }
+
+        _isUpdatingLobbyPlayerData = true;
 
         try {
             UpdatePlayerOptions options = new UpdatePlayerOptions {
@@ -621,13 +643,17 @@ public class KitchenGameLobby : MonoBehaviour {
                 options);
         } catch (LobbyServiceException e) {
             Debug.LogError($"Failed to update player color: {e}");
+        } finally {
+            _isUpdatingLobbyPlayerData = false;
         }
     }
 
     public async Task SetLobbyMatchmakingStatus(string status) {
-        if (_joinedLobby == null || !IsLocalPlayerLobbyHost()) {
+        if (_joinedLobby == null || !IsLocalPlayerLobbyHost() || _isUpdatingLobbyMatchmakingStatus) {
             return;
         }
+
+        _isUpdatingLobbyMatchmakingStatus = true;
 
         try {
             UpdateLobbyOptions options = new UpdateLobbyOptions {
@@ -639,6 +665,8 @@ public class KitchenGameLobby : MonoBehaviour {
             await LobbyService.Instance.UpdateLobbyAsync(_joinedLobby.Id, options);
         } catch (LobbyServiceException e) {
             Debug.LogError($"Failed to update lobby with match data: {e}");
+        } finally {
+            _isUpdatingLobbyMatchmakingStatus = false;
         }
     }
 

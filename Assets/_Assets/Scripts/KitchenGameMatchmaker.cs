@@ -6,8 +6,6 @@ using Unity.Services.Authentication;
 using Unity.Services.Lobbies.Models;
 using Unity.Services.Matchmaker;
 using Unity.Services.Matchmaker.Models;
-using Unity.Services.Relay;
-using Unity.Services.Relay.Models;
 using UnityEngine;
 
 public class KitchenGameMatchmaker : MonoBehaviour {
@@ -20,6 +18,9 @@ public class KitchenGameMatchmaker : MonoBehaviour {
     public event EventHandler OnCancelFindMatchStarted;
     public event EventHandler OnCancelFindMatchFailed;
     public event EventHandler OnCancelFindMatchSucceeded;
+
+    private bool _isFindingMatch;
+    private bool _isCancellingMatchmaking;
 
     [Serializable]
     public class MatchmakingPlayerData {
@@ -34,6 +35,15 @@ public class KitchenGameMatchmaker : MonoBehaviour {
 
     private void Awake() {
         Instance = this;
+    }
+
+    private void Start() {
+        KitchenGameLobby.Instance.OnLobbyLeaveSucceeded += KitchenGameLobbyOnLobbyLeaveSucceeded;
+    }
+
+    private async void KitchenGameLobbyOnLobbyLeaveSucceeded(object sender, EventArgs e) {
+        Debug.Log("Matchmaker KitchenGameLobbyOnLobbyLeaveSucceeded Cancelling Matchmaking...");
+        await CancelMatchmaking();
     }
 
     private void Update() {
@@ -79,109 +89,43 @@ public class KitchenGameMatchmaker : MonoBehaviour {
     }
 
     public async Task CancelMatchmaking() {
+        if (_createTicketResponse == null) {
+            OnCancelFindMatchSucceeded?.Invoke(this, EventArgs.Empty);
+            return;
+        }
+        
+        if (_isCancellingMatchmaking) {
+            return;
+        }
+
+        _isCancellingMatchmaking = true;
+
         Debug.Log("CancelMatchmaking");
 
-        if (_createTicketResponse != null) {
-            OnCancelFindMatchStarted?.Invoke(this, EventArgs.Empty);
+        OnCancelFindMatchStarted?.Invoke(this, EventArgs.Empty);
 
-            try {
-                await MatchmakerService.Instance.DeleteTicketAsync(_createTicketResponse.Id);
-                _createTicketResponse = null;
-                Debug.Log("Matchmaking cancelled successfully.");
+        try {
+            await MatchmakerService.Instance.DeleteTicketAsync(_createTicketResponse.Id);
+            _createTicketResponse = null;
+            Debug.Log("Matchmaking cancelled successfully.");
 
-                OnCancelFindMatchSucceeded?.Invoke(this, EventArgs.Empty);
-            } catch (MatchmakerServiceException e) {
-                Debug.LogError($"Failed to delete matchmaking ticket: {e.Message}");
+            OnCancelFindMatchSucceeded?.Invoke(this, EventArgs.Empty);
+        } catch (MatchmakerServiceException e) {
+            Debug.LogError($"Failed to delete matchmaking ticket: {e.Message}");
 
-                OnCancelFindMatchFailed?.Invoke(this, EventArgs.Empty);
-            }
-        }
-    }
-
-    public async Awaitable CancelMatchmakingWithBackoff() {
-        Debug.Log("CancelMatchmakingWithBackoff");
-
-        if (_createTicketResponse != null) {
-            int maxRetries = 5;
-            float baseDelay = 1f;
-            
-            for (int attempt = 0; attempt < maxRetries; attempt++) {
-                Debug.Log("CancelMatchmakingWithBackoff attempt: " + attempt);
-                try {
-                    await MatchmakerService.Instance.DeleteTicketAsync(_createTicketResponse.Id);
-                    _createTicketResponse = null;
-                    Debug.Log("Matchmaking cancelled successfully.");
-                    OnCancelFindMatchSucceeded?.Invoke(this, EventArgs.Empty);
-                    return; // Success
-                } catch (MatchmakerServiceException e) {
-
-                    if (e.Message.Contains("429 Too Many Requests")) {
-                        if (attempt == maxRetries - 1) throw;
-                        
-                        float delay = baseDelay * Mathf.Pow(2, attempt);
-                        Debug.Log($"Rate limited (expected), retrying in {delay}s... (attempt {attempt + 1}/{maxRetries})");
-                        await Awaitable.WaitForSecondsAsync(delay);
-                    }
-
-                    if (e.Message.Contains("EntityNotFound") || e.Message.Contains("not found")) {
-                        Debug.Log("Ticket already cancelled/expired - treating as success");
-                        OnCancelFindMatchSucceeded?.Invoke(this, EventArgs.Empty);
-                        return; // Treat as successful cancellation
-                    }
-
-                    Debug.LogError($"Failed to delete matchmaking ticket: {e.Message}");
-
-                    OnCancelFindMatchFailed?.Invoke(this, EventArgs.Empty);
-                }
-            }
-        }
-    }
-
-    public async Awaitable FindMatchWithBackoff() {
-        Debug.Log("FindMatch");
-
-        OnFindMatchStarted?.Invoke(this, EventArgs.Empty);
-
-        int maxRetries = 5;
-        float baseDelay = 1f;
-
-        for (int attempt = 0; attempt < maxRetries; attempt++)
-        {
-            try 
-            {
-                _createTicketResponse = await MatchmakerService.Instance.CreateTicketAsync(
-                    GetMatchmakingPlayers(),
-                    new CreateTicketOptions { QueueName = DEFAULT_QUEUE }
-                );
-
-                // Wait a bit, don't poll right away
-                _pollTicketTimer = _pollTicketTimerMax;
-                return; // Success
-            } 
-            catch (MatchmakerServiceException ex) 
-            {
-                // Only retry for rate limiting
-                if (ex.Message.Contains("429 Too Many Requests") || ex.Message.Contains("RateLimited"))
-                {
-                    if (attempt == maxRetries - 1)
-                    {
-                        Debug.LogError($"Failed to create ticket after all retries due to rate limiting: {ex}");
-                        throw;
-                    }
-                    
-                    float delay = baseDelay * Mathf.Pow(2, attempt);
-                    Debug.Log($"Rate limited creating ticket, retrying in {delay}s... (attempt {attempt + 1}/{maxRetries})");
-                    await Awaitable.WaitForSecondsAsync(delay);
-                    continue;
-                }
-
-                // All other errors = immediate failure, no retry
-                Debug.LogError($"Failed to create ticket: {ex}");
-            }
-        }
+            OnCancelFindMatchFailed?.Invoke(this, EventArgs.Empty);
+        } finally {
+            _isCancellingMatchmaking = false;
+        }        
     }
 
     public async Task FindMatch() {
+        if (_createTicketResponse != null || _isFindingMatch) {
+            return;
+        }
+
+        _isFindingMatch = true;
+
         Debug.Log("FindMatch");
 
         OnFindMatchStarted?.Invoke(this, EventArgs.Empty);
@@ -196,6 +140,8 @@ public class KitchenGameMatchmaker : MonoBehaviour {
             _pollTicketTimer = _pollTicketTimerMax;
         } catch (MatchmakerServiceException e) {
             Debug.Log(e);
+        } finally {
+            _isFindingMatch = false;
         }
     }
 
@@ -277,5 +223,9 @@ public class KitchenGameMatchmaker : MonoBehaviour {
         } finally {
             _isPolling = false;
         }
+    }
+
+    private void OnDestroy() {
+        KitchenGameLobby.Instance.OnLobbyLeaveSucceeded -= KitchenGameLobbyOnLobbyLeaveSucceeded;
     }
 }
