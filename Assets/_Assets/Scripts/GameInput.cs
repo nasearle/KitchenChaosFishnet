@@ -41,8 +41,11 @@ public class GameInput : MonoBehaviour {
         _playerInputActions.Player.Interact.performed += InteractOnperformed;
         _playerInputActions.Player.InteractAlternate.performed += InteractAlternateOnperformed;
         _playerInputActions.Player.Pause.performed += PauseOnperformed;
+        _playerInputActions.Player.Fullscreen.performed += FullscreenOnPerformed;
         
         _playerInputActions.UI.Pause.performed += PauseOnperformed;
+        _playerInputActions.UI.Fullscreen.performed += FullscreenOnPerformed;
+
         
         GameManager.Instance.OnMultiplayerGamePaused += GameManagerOnMultiplayerGamePaused;
         GameManager.Instance.OnMultiplayerGameResumed += GameManagerOnMultiplayerGameResumed;
@@ -62,8 +65,19 @@ public class GameInput : MonoBehaviour {
         _playerInputActions.Player.Interact.performed -= InteractOnperformed;
         _playerInputActions.Player.InteractAlternate.performed -= InteractAlternateOnperformed;
         _playerInputActions.Player.Pause.performed -= PauseOnperformed;
+
+        _playerInputActions.Player.Fullscreen.performed -= FullscreenOnPerformed;
+        
+        _playerInputActions.UI.Pause.performed -= PauseOnperformed;
+        _playerInputActions.UI.Fullscreen.performed -= FullscreenOnPerformed;
         
         _playerInputActions.Dispose();
+    }
+
+    private void FullscreenOnPerformed(InputAction.CallbackContext context) {
+        Debug.Log("FullscreenOnPerformed");
+        Screen.fullScreen = !Screen.fullScreen;
+        Debug.Log(Screen.fullScreen);
     }
 
     private void PauseOnperformed(InputAction.CallbackContext obj) {

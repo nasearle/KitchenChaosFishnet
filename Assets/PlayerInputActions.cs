@@ -126,6 +126,15 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Fullscreen"",
+                    ""type"": ""Button"",
+                    ""id"": ""4baab637-80f8-450c-8222-aa04cbb4bffa"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -315,6 +324,28 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""action"": ""Pause"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""42995658-65ac-4f87-83d3-58cc222d4e71"",
+                    ""path"": ""<Keyboard>/t"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Fullscreen"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""030dc97c-3a7f-4f68-8609-e96d1e5c776a"",
+                    ""path"": ""<Gamepad>/select"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Fullscreen"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -326,6 +357,15 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""name"": ""Pause"",
                     ""type"": ""Button"",
                     ""id"": ""ad112328-9953-4b4b-b9bc-ed044384fc7c"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Fullscreen"",
+                    ""type"": ""Button"",
+                    ""id"": ""4973a19f-8044-4a32-9c17-d4adbe6fa51a"",
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
@@ -354,6 +394,28 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""action"": ""Pause"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""8fa3d990-0556-4e4a-a59b-260c7c572aed"",
+                    ""path"": ""<Keyboard>/t"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Fullscreen"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""39adbab6-66e7-4f37-a2da-7e8499e181ea"",
+                    ""path"": ""<Gamepad>/select"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Fullscreen"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -366,9 +428,11 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         m_Player_Interact = m_Player.FindAction("Interact", throwIfNotFound: true);
         m_Player_InteractAlternate = m_Player.FindAction("InteractAlternate", throwIfNotFound: true);
         m_Player_Pause = m_Player.FindAction("Pause", throwIfNotFound: true);
+        m_Player_Fullscreen = m_Player.FindAction("Fullscreen", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Pause = m_UI.FindAction("Pause", throwIfNotFound: true);
+        m_UI_Fullscreen = m_UI.FindAction("Fullscreen", throwIfNotFound: true);
     }
 
     ~@PlayerInputActions()
@@ -454,6 +518,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Interact;
     private readonly InputAction m_Player_InteractAlternate;
     private readonly InputAction m_Player_Pause;
+    private readonly InputAction m_Player_Fullscreen;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -481,6 +546,10 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/Pause".
         /// </summary>
         public InputAction @Pause => m_Wrapper.m_Player_Pause;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/Fullscreen".
+        /// </summary>
+        public InputAction @Fullscreen => m_Wrapper.m_Player_Fullscreen;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -519,6 +588,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @Pause.started += instance.OnPause;
             @Pause.performed += instance.OnPause;
             @Pause.canceled += instance.OnPause;
+            @Fullscreen.started += instance.OnFullscreen;
+            @Fullscreen.performed += instance.OnFullscreen;
+            @Fullscreen.canceled += instance.OnFullscreen;
         }
 
         /// <summary>
@@ -542,6 +614,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @Pause.started -= instance.OnPause;
             @Pause.performed -= instance.OnPause;
             @Pause.canceled -= instance.OnPause;
+            @Fullscreen.started -= instance.OnFullscreen;
+            @Fullscreen.performed -= instance.OnFullscreen;
+            @Fullscreen.canceled -= instance.OnFullscreen;
         }
 
         /// <summary>
@@ -580,6 +655,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
     private readonly InputActionMap m_UI;
     private List<IUIActions> m_UIActionsCallbackInterfaces = new List<IUIActions>();
     private readonly InputAction m_UI_Pause;
+    private readonly InputAction m_UI_Fullscreen;
     /// <summary>
     /// Provides access to input actions defined in input action map "UI".
     /// </summary>
@@ -595,6 +671,10 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "UI/Pause".
         /// </summary>
         public InputAction @Pause => m_Wrapper.m_UI_Pause;
+        /// <summary>
+        /// Provides access to the underlying input action "UI/Fullscreen".
+        /// </summary>
+        public InputAction @Fullscreen => m_Wrapper.m_UI_Fullscreen;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -624,6 +704,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @Pause.started += instance.OnPause;
             @Pause.performed += instance.OnPause;
             @Pause.canceled += instance.OnPause;
+            @Fullscreen.started += instance.OnFullscreen;
+            @Fullscreen.performed += instance.OnFullscreen;
+            @Fullscreen.canceled += instance.OnFullscreen;
         }
 
         /// <summary>
@@ -638,6 +721,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @Pause.started -= instance.OnPause;
             @Pause.performed -= instance.OnPause;
             @Pause.canceled -= instance.OnPause;
+            @Fullscreen.started -= instance.OnFullscreen;
+            @Fullscreen.performed -= instance.OnFullscreen;
+            @Fullscreen.canceled -= instance.OnFullscreen;
         }
 
         /// <summary>
@@ -706,6 +792,13 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnPause(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Fullscreen" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnFullscreen(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.
@@ -721,5 +814,12 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnPause(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Fullscreen" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnFullscreen(InputAction.CallbackContext context);
     }
 }

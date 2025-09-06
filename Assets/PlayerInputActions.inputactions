@@ -40,6 +40,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Fullscreen",
+                    "type": "Button",
+                    "id": "4baab637-80f8-450c-8222-aa04cbb4bffa",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -229,6 +238,28 @@
                     "action": "Pause",
                     "isComposite": false,
                     "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "42995658-65ac-4f87-83d3-58cc222d4e71",
+                    "path": "<Keyboard>/t",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Fullscreen",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "030dc97c-3a7f-4f68-8609-e96d1e5c776a",
+                    "path": "<Gamepad>/select",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Fullscreen",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 }
             ]
         },
@@ -240,6 +271,15 @@
                     "name": "Pause",
                     "type": "Button",
                     "id": "ad112328-9953-4b4b-b9bc-ed044384fc7c",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Fullscreen",
+                    "type": "Button",
+                    "id": "4973a19f-8044-4a32-9c17-d4adbe6fa51a",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -266,6 +306,28 @@
                     "processors": "",
                     "groups": "",
                     "action": "Pause",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "8fa3d990-0556-4e4a-a59b-260c7c572aed",
+                    "path": "<Keyboard>/t",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Fullscreen",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "39adbab6-66e7-4f37-a2da-7e8499e181ea",
+                    "path": "<Gamepad>/select",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Fullscreen",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

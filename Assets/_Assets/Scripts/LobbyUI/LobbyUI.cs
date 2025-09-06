@@ -2,6 +2,7 @@ using System;
 using TMPro;
 using Unity.Services.Lobbies.Models;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 public class LobbyUI : MonoBehaviour {
@@ -22,6 +23,14 @@ public class LobbyUI : MonoBehaviour {
     private bool _findMatchButtonOnCoolDown;
     private float _findMatchButtonCoolDownTimer = 0f;
     private float _findMatchButtonCoolDownTimerMax = 1.1f;
+
+    private PlayerInputActions _playerInputActions;
+
+    private void Awake() {
+        _playerInputActions = new PlayerInputActions();
+        _playerInputActions.UI.Enable();
+        _playerInputActions.UI.Fullscreen.performed += FullscreenOnPerformed;
+    }
 
     private void Start() {
         // Make all buttons not interactable initially
@@ -91,6 +100,12 @@ public class LobbyUI : MonoBehaviour {
                 _findMatchButtonOnCoolDown = false;
             }
         }
+    }
+
+    private void FullscreenOnPerformed(InputAction.CallbackContext context) {
+        Debug.Log("FullscreenOnPerformed");
+        Screen.fullScreen = !Screen.fullScreen;
+        Debug.Log(Screen.fullScreen);
     }
 
     private void KitchenGameLobbyOnUnityGamingServicesInitialized(object sender, EventArgs e) {
@@ -212,5 +227,11 @@ public class LobbyUI : MonoBehaviour {
         KitchenGameLobby.Instance.OnJoinedLobbyTopLevelDataChange -= KitchenGameLobbyOnJoinedLobbyTopLevelDataChange;
         KitchenGameLobby.Instance.OnJoinedLobbyPlayerStatusChanged -= KitchenGameLobbyOnJoinedLobbyPlayerStatusChanged;
         KitchenGameLobby.Instance.OnPlayerMatchmakingStatusChanged -= KitchenGameLobbyOnPlayerMatchmakingStatusChanged;
+
+        _playerInputActions.UI.Fullscreen.performed -= FullscreenOnPerformed;
+
+        _playerInputActions.Disable();
+        
+        _playerInputActions.Dispose();
     }
 }
