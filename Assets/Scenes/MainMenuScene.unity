@@ -1366,6 +1366,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playButton: {fileID: 446624914}
   quitButton: {fileID: 569193816}
+  fullScreenButton: {fileID: 1747759009}
+  magnifyPlusSprite: {fileID: 21300000, guid: e8e788d00a023ef4ea9a8e321c8efb2a, type: 3}
+  magnifyMinusSprite: {fileID: 21300000, guid: 729052d35d545f2459aa6859cdcac322, type: 3}
 --- !u!1 &1747759009
 GameObject:
   m_ObjectHideFlags: 0
@@ -1399,9 +1402,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1733604487}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 694.6596, y: 430.78885}
+  m_AnchorMin: {x: 1, y: 1}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: -140, y: -110}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1747759011
@@ -1437,7 +1440,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: a14e6ee680df42f4c99bf69bc3d6b9ca, type: 3}
+  m_Sprite: {fileID: 21300000, guid: e8e788d00a023ef4ea9a8e321c8efb2a, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

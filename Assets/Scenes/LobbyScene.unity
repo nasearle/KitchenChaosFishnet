@@ -1769,11 +1769,14 @@ MonoBehaviour:
   joinCodeButton: {fileID: 843352239}
   findMatchButton: {fileID: 852419961}
   copyLobbyCodeButton: {fileID: 317798745}
+  fullScreenButton: {fileID: 1764488209}
   copyLobbyCodeButtonText: {fileID: 378412693}
   joinCodeInputField: {fileID: 539595835}
   playerNameInputField: {fileID: 996286472}
   joinCodeText: {fileID: 1688617260}
   findMatchButtonText: {fileID: 1161204219}
+  magnifyPlusSprite: {fileID: 21300000, guid: e8e788d00a023ef4ea9a8e321c8efb2a, type: 3}
+  magnifyMinusSprite: {fileID: 21300000, guid: 729052d35d545f2459aa6859cdcac322, type: 3}
 --- !u!1 &514903443
 GameObject:
   m_ObjectHideFlags: 0
@@ -3960,7 +3963,7 @@ MonoBehaviour:
   _timingType: 0
   _allowTickDropping: 1
   _maximumFrameTicks: 3
-  _tickRate: 30
+  _tickRate: 20
   _pingInterval: 1
   _physicsMode: 1
 --- !u!114 &1132862298
@@ -5864,9 +5867,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 449067070}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 694.6596, y: 430.78885}
+  m_AnchorMin: {x: 1, y: 1}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: -140, y: -110}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1764488211
@@ -5902,7 +5905,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: a14e6ee680df42f4c99bf69bc3d6b9ca, type: 3}
+  m_Sprite: {fileID: 21300000, guid: e8e788d00a023ef4ea9a8e321c8efb2a, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

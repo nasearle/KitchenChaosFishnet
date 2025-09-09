@@ -12,11 +12,14 @@ public class LobbyUI : MonoBehaviour {
     [SerializeField] private Button joinCodeButton;
     [SerializeField] private Button findMatchButton;
     [SerializeField] private Button copyLobbyCodeButton;
+    [SerializeField] private GameObject fullScreenButton;
     [SerializeField] private TextMeshProUGUI copyLobbyCodeButtonText;
     [SerializeField] private TMP_InputField joinCodeInputField;
     [SerializeField] private TMP_InputField playerNameInputField;
     [SerializeField] private TextMeshProUGUI joinCodeText;
     [SerializeField] private TextMeshProUGUI findMatchButtonText;
+    [SerializeField] private Sprite magnifyPlusSprite;
+    [SerializeField] private Sprite magnifyMinusSprite;
 
     private float _copyLobbyCodeButtonTextTimer = 0f;
     private float _copyLobbyCodeButtonTextTimerMax = 3f;
@@ -37,6 +40,9 @@ public class LobbyUI : MonoBehaviour {
         createLobbyButton.interactable = false;
         joinCodeButton.interactable = false;
         findMatchButton.interactable = false;
+
+        fullScreenButton.SetActive(Application.isMobilePlatform);
+        SetFullScreenButtonSprite();
 
         if (KitchenGameLobby.Instance.GetLobby() == null) {
             copyLobbyCodeButton.gameObject.SetActive(false);
@@ -102,10 +108,20 @@ public class LobbyUI : MonoBehaviour {
         }
     }
 
+    private void SetFullScreenButtonSprite() {
+        Image fullScreenButtonImage = fullScreenButton.GetComponent<Image>();
+
+        if (Screen.fullScreen) {
+            fullScreenButtonImage.sprite = magnifyMinusSprite;
+        } else {
+            fullScreenButtonImage.sprite = magnifyPlusSprite;
+        }
+    }
+
     private void FullscreenOnPerformed(InputAction.CallbackContext context) {
-        Debug.Log("FullscreenOnPerformed");
         Screen.fullScreen = !Screen.fullScreen;
-        Debug.Log(Screen.fullScreen);
+
+        SetFullScreenButtonSprite();
     }
 
     private void KitchenGameLobbyOnUnityGamingServicesInitialized(object sender, EventArgs e) {

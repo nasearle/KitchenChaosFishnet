@@ -5,6 +5,9 @@ using UnityEngine.UI;
 public class MainMenuUI : MonoBehaviour {
     [SerializeField] private Button playButton;
     [SerializeField] private Button quitButton;
+    [SerializeField] private GameObject fullScreenButton;
+    [SerializeField] private Sprite magnifyPlusSprite;
+    [SerializeField] private Sprite magnifyMinusSprite;
 
     private PlayerInputActions _playerInputActions;
 
@@ -26,10 +29,25 @@ public class MainMenuUI : MonoBehaviour {
     
     }
 
+    private void Start() {
+        fullScreenButton.SetActive(Application.isMobilePlatform);
+        SetFullScreenButtonSprite();
+    }
+
+    private void SetFullScreenButtonSprite() {
+        Image fullScreenButtonImage = fullScreenButton.GetComponent<Image>();
+
+        if (Screen.fullScreen) {
+            fullScreenButtonImage.sprite = magnifyMinusSprite;
+        } else {
+            fullScreenButtonImage.sprite = magnifyPlusSprite;
+        }
+    }
+
     private void FullscreenOnPerformed(InputAction.CallbackContext context) {
-        Debug.Log("FullscreenOnPerformed");
         Screen.fullScreen = !Screen.fullScreen;
-        Debug.Log(Screen.fullScreen);
+        
+        SetFullScreenButtonSprite();
     }
 
     private void OnDestroy() {

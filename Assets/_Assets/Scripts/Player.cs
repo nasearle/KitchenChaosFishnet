@@ -189,9 +189,11 @@ public class Player : NetworkBehaviour, IKitchenObjectParent {
     }
     
     public override void CreateReconcile() {
-        transform.GetPositionAndRotation(out Vector3 position, out Quaternion rotation);
-        ReconcileData data = new ReconcileData(position, rotation);
-        ReconcileState(data);
+        if (TimeManager.LocalTick % 3 == 0) {
+            transform.GetPositionAndRotation(out Vector3 position, out Quaternion rotation);
+            ReconcileData data = new ReconcileData(position, rotation);
+            ReconcileState(data);
+        }
     }
     
     [Reconcile]

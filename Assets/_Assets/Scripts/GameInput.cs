@@ -10,6 +10,7 @@ public class GameInput : MonoBehaviour {
     public event EventHandler OnInteractAlternateAction;
     public event EventHandler OnPauseAction;
     public event EventHandler OnBindingRebind;
+    public event EventHandler OnFullScreen;
 
     public enum Binding {
         Move_Up,
@@ -75,9 +76,8 @@ public class GameInput : MonoBehaviour {
     }
 
     private void FullscreenOnPerformed(InputAction.CallbackContext context) {
-        Debug.Log("FullscreenOnPerformed");
         Screen.fullScreen = !Screen.fullScreen;
-        Debug.Log(Screen.fullScreen);
+        OnFullScreen?.Invoke(this, EventArgs.Empty);
     }
 
     private void PauseOnperformed(InputAction.CallbackContext obj) {
