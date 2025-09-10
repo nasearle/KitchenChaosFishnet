@@ -20,6 +20,7 @@ public class LobbyUI : MonoBehaviour {
     [SerializeField] private TextMeshProUGUI findMatchButtonText;
     [SerializeField] private Sprite magnifyPlusSprite;
     [SerializeField] private Sprite magnifyMinusSprite;
+    [SerializeField] private Toggle isPrivateMatchToggle;
 
     private float _copyLobbyCodeButtonTextTimer = 0f;
     private float _copyLobbyCodeButtonTextTimerMax = 3f;
@@ -40,6 +41,7 @@ public class LobbyUI : MonoBehaviour {
         createLobbyButton.interactable = false;
         joinCodeButton.interactable = false;
         findMatchButton.interactable = false;
+        isPrivateMatchToggle.interactable = false;
 
         fullScreenButton.SetActive(Application.isMobilePlatform);
         SetFullScreenButtonSprite();
@@ -133,12 +135,14 @@ public class LobbyUI : MonoBehaviour {
 
         if (KitchenGameLobby.Instance.GetLobby() == null || KitchenGameLobby.Instance.IsLocalPlayerLobbyHost()) {
             findMatchButton.interactable = true;
+            isPrivateMatchToggle.interactable = true;
         }
     }
 
     private void KitchenGameLobbyOnLobbyLeaveSucceeded(object sender, EventArgs e) {
         joinCodeText.text = "";
         findMatchButton.interactable = true;
+        isPrivateMatchToggle.interactable = true;
         createLobbyButton.interactable = true;
         copyLobbyCodeButton.gameObject.SetActive(false);
     }
@@ -151,6 +155,7 @@ public class LobbyUI : MonoBehaviour {
 
         if (!KitchenGameLobby.Instance.IsLocalPlayerLobbyHost()) {
             findMatchButton.interactable = false;
+            isPrivateMatchToggle.interactable = false;
         }
 
         copyLobbyCodeButton.gameObject.SetActive(true);
@@ -159,8 +164,10 @@ public class LobbyUI : MonoBehaviour {
     private void KitchenGameLobbyOnJoinedLobbyPlayerStatusChanged(object sender, EventArgs e) {
         if (!KitchenGameLobby.Instance.IsLocalPlayerLobbyHost()) {
             findMatchButton.interactable = false;
+            isPrivateMatchToggle.interactable = false;
         } else {
             findMatchButton.interactable = true;
+            isPrivateMatchToggle.interactable = true;
         }
     }
 
@@ -216,9 +223,20 @@ public class LobbyUI : MonoBehaviour {
 
     private async void FindMatch() {
         findMatchButton.interactable = false;
+        isPrivateMatchToggle.interactable = false;
 
-        if (KitchenGameLobby.Instance.GetLobby() == null || KitchenGameLobby.Instance.IsLocalPlayerLobbyHost()) {
-            await KitchenGameMatchmaker.Instance.FindMatch();
+        Lobby joinedLobby = KitchenGameLobby.Instance.GetLobby();
+        int totalAllowedPlayers = 4;
+
+        if (joinedLobby == null || KitchenGameLobby.Instance.IsLocalPlayerLobbyHost()) {
+            if (isPrivateMatchToggle.isOn) {
+                if (joinedLobby != null) {
+                    totalAllowedPlayers = joinedLobby.Players.Count;
+                } else {
+                    totalAllowedPlayers = 1;
+                }
+            }
+            await KitchenGameMatchmaker.Instance.FindMatch(totalAllowedPlayers);
         }
         
         _findMatchButtonOnCoolDown = true;
@@ -234,6 +252,7 @@ public class LobbyUI : MonoBehaviour {
         
         _findMatchButtonOnCoolDown = true;
         _findMatchButtonCoolDownTimer = _findMatchButtonCoolDownTimerMax;
+        isPrivateMatchToggle.interactable = true;
     }
 
     private void OnDestroy() {

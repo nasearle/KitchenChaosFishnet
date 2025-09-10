@@ -12,6 +12,7 @@ using Unity.Services.Lobbies.Models;
 using Unity.Services.Matchmaker.Models;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class KitchenGameLobby : MonoBehaviour {
     public const int MAX_PLAYER_AMOUNT = 4;
@@ -54,7 +55,7 @@ public class KitchenGameLobby : MonoBehaviour {
     private float _updatePlayersCooldownTimerMax = 1.1f;
     private bool _isUpdatingLobbyPlayerData;
     private bool _isUpdatingLobbyMatchmakingStatus;
-
+    private float _noConnectedClientsServerShutdownTimer = 15f;
 
     public static class LobbyDataKeys {
         public const string ColorId = "ColorId";
@@ -78,26 +79,12 @@ public class KitchenGameLobby : MonoBehaviour {
         DontDestroyOnLoad(gameObject);
 
         _networkManager = InstanceFinder.NetworkManager;
-        _networkManager.ServerManager.OnRemoteConnectionState += ServerManagerOnRemoteConnectionState;
 
         _playerData = new PlayerData() {
             matchmakingStatus = MatchmakingStatus.Waiting.ToString()
         };
 
         _playerData.playerName = PlayerPrefs.GetString(PLAYER_PREFS_PLAYER_NAME, "PlayerName" + UnityEngine.Random.Range(100, 1000));
-    }
-
-    private void ServerManagerOnRemoteConnectionState(NetworkConnection connection, RemoteConnectionStateArgs connectionStateArgs) {
-        if (connectionStateArgs.ConnectionState == RemoteConnectionState.Stopped) {
-            // The server counts itself as a connected client for some reason, 
-            // so subtract one to get the actual connected player count.
-            int connectedPlayers = _networkManager.ServerManager.Clients.Count - 1;
-
-            if (connectedPlayers == 0) {
-                Debug.Log("GAME_MANAGER ServerManagerOnRemoteConnectionState ALL CLIENTS DISCONNECTED");
-                ShutdownServer();
-            }
-        }
     }
 
     private void Start() {
@@ -154,11 +141,21 @@ public class KitchenGameLobby : MonoBehaviour {
 #if UNITY_SERVER
         HandleRelayJoinCodeLobbyHeartbeat();
 
+        int connectedPlayers = _networkManager.ServerManager.Clients.Count;
+
         if (KitchenGameDedicatedServer.serverQueryHandler != null) {
             if (_networkManager.IsServerStarted) {
-                KitchenGameDedicatedServer.serverQueryHandler.CurrentPlayers = (ushort)_networkManager.ServerManager.Clients.Keys.Count;
+                KitchenGameDedicatedServer.serverQueryHandler.CurrentPlayers = (ushort)connectedPlayers;
             }
             KitchenGameDedicatedServer.serverQueryHandler.UpdateServerCheck();
+        }
+
+        if (connectedPlayers == 0) {
+            _noConnectedClientsServerShutdownTimer -= Time.deltaTime;
+            if (_noConnectedClientsServerShutdownTimer <= 0f) {
+                Debug.Log($"KITCHEN_GAME_LOBBY No connected clients timeout." );
+                ShutdownServer();
+            }
         }
 #endif
     }
@@ -775,6 +772,12 @@ public class KitchenGameLobby : MonoBehaviour {
     }
 
     private void OnDestroy() {
-        InitializeUnityGamingServices.Instance.OnInitialized += InitializeUnityGamingServicesOnInitialized;
+        InitializeUnityGamingServices.Instance.OnInitialized -= InitializeUnityGamingServicesOnInitialized;
+
+        KitchenGameMatchmaker.Instance.OnFindMatchStarted -= KitchenGameMatchmakerOnFindMatchStarted;
+        KitchenGameMatchmaker.Instance.OnFindMatchFailed -= KitchenGameMatchmakerOnFindMatchFailed;
+        KitchenGameMatchmaker.Instance.OnCancelFindMatchStarted -= KitchenGameMatchmakerOnCancelFindMatchStarted;
+        KitchenGameMatchmaker.Instance.OnCancelFindMatchSucceeded -= KitchenGameMatchmakerOnCancelFindMatchSucceeded;
+        KitchenGameMatchmaker.Instance.OnCancelFindMatchFailed -= KitchenGameMatchmakerOnCancelFindMatchFailed;
     }
 }

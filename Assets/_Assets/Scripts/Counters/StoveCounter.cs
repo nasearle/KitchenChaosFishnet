@@ -44,22 +44,27 @@ public class StoveCounter : BaseCounter, IHasProgess {
         }
     }
 
-    private void BurningTimerOnChange(float prev, float next, bool asserver) {
-        // TODO: Bug where this shows a full burning bar with the warning flashing for an instant before reverting to the 
-        // normal progress bar
-        float burningTimerMax = _burningRecipeSO != null ? _burningRecipeSO.burningTimerMax : 1f;
-        
-        OnProgressChanged?.Invoke(this, new IHasProgess.OnProgressChangedEventArgs {
-            ProgressNormalized = _burningTimer.Value / burningTimerMax
-        });
+    private void BurningTimerOnChange(float prev, float next, bool asServer) {
+        // Need to check the state here on the client again because there might
+        // be some changes to the frying timer still in transit when the state
+        // has already changed to Burned.
+        if (IsFried()) {
+            float burningTimerMax = _burningRecipeSO != null ? _burningRecipeSO.burningTimerMax : 1f;
+            
+            OnProgressChanged?.Invoke(this, new IHasProgess.OnProgressChangedEventArgs {
+                ProgressNormalized = _burningTimer.Value / burningTimerMax
+            });
+        }
     }
 
     private void FryingTimerOnChange(float prev, float next, bool asServer) {
-        float fryingTimerMax = _fryingRecipeSO != null ? _fryingRecipeSO.fryingTimerMax : 1f;
-        
-        OnProgressChanged?.Invoke(this, new IHasProgess.OnProgressChangedEventArgs {
-            ProgressNormalized = _fryingTimer.Value / fryingTimerMax
-        });
+        if (IsFrying()) {
+            float fryingTimerMax = _fryingRecipeSO != null ? _fryingRecipeSO.fryingTimerMax : 1f;
+            
+            OnProgressChanged?.Invoke(this, new IHasProgess.OnProgressChangedEventArgs {
+                ProgressNormalized = _fryingTimer.Value / fryingTimerMax
+            });
+        }
     }
 
     private void Update() {
@@ -74,7 +79,6 @@ public class StoveCounter : BaseCounter, IHasProgess {
                 case State.Frying:
                     _fryingTimer.Value += Time.deltaTime;
                     
-                    
                     if (_fryingTimer.Value > _fryingRecipeSO.fryingTimerMax) {
                         // Fried
                         KitchenObject.DestroyKitchenObject(GetKitchenObject());
@@ -82,8 +86,6 @@ public class StoveCounter : BaseCounter, IHasProgess {
                         
                         _state.Value = State.Fried;
                         
-                        // Bug here where the burning timer on change is triggered, but the burning recipe isn't set yet
-                        // see TODO in BurningTimerOnChange.
                         _burningTimer.Value = 0f;
                         SetBurningRecipeSOClientRpc(
                             KitchenGameMultiplayer.Instance.GetKitchenObjectSOIndex(GetKitchenObject().GetKitchenObjectSO())
@@ -193,6 +195,10 @@ public class StoveCounter : BaseCounter, IHasProgess {
             }
         }
         return null;
+    }
+
+    public bool IsFrying() {
+        return _state.Value == State.Frying;
     }
 
     public bool IsFried() {

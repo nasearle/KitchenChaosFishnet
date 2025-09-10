@@ -19,6 +19,7 @@ public class CuttingCounter : BaseCounter, IHasProgess {
     
     public override void Interact(Player player) {
         if (!HasKitchenObject()) {
+            // There is no kitchen object here.
             if (player.HasKitchenObject()) {
                 if (HasRecipeWithInput(player.GetKitchenObject().GetKitchenObjectSO())) {
                     KitchenObject kitchenObject = player.GetKitchenObject();
@@ -36,10 +37,9 @@ public class CuttingCounter : BaseCounter, IHasProgess {
                     }
                 }
             } else {
+                // Player isn't holding anything.
                 GetKitchenObject().SetKitchenObjectParent(player);
-                OnProgressChanged?.Invoke(this, new IHasProgess.OnProgressChangedEventArgs {
-                    ProgressNormalized = 0f
-                });
+                PickUpObjectFromCounterServerRpc();
             }
         }
     }
@@ -55,6 +55,18 @@ public class CuttingCounter : BaseCounter, IHasProgess {
                 _localCutAnimationPlayed = true;
             }
         }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void PickUpObjectFromCounterServerRpc() {
+        PickUpObjectFromCounterClientRpc();
+    }
+
+    [ObserversRpc(RunLocally = true)]
+    private void PickUpObjectFromCounterClientRpc() {
+        OnProgressChanged?.Invoke(this, new IHasProgess.OnProgressChangedEventArgs {
+            ProgressNormalized = 0f
+        });
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -79,7 +91,8 @@ public class CuttingCounter : BaseCounter, IHasProgess {
 
     [ObserversRpc(RunLocally = true)]
     private void CutObjectClientRpc() {
-        if (!HasRecipeWithInput(GetKitchenObject().GetKitchenObjectSO())) {
+        if (!HasKitchenObject() ||
+            !HasRecipeWithInput(GetKitchenObject().GetKitchenObjectSO())) {
             return;
         }
         
@@ -102,7 +115,7 @@ public class CuttingCounter : BaseCounter, IHasProgess {
     }
 
     private void TestCuttingProgressDone() {
-        if (!HasRecipeWithInput(GetKitchenObject().GetKitchenObjectSO())) {
+        if (!HasKitchenObject() || !HasRecipeWithInput(GetKitchenObject().GetKitchenObjectSO())) {
             return;
         }
         

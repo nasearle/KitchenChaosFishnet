@@ -10,6 +10,7 @@ using UnityEngine;
 
 public class KitchenGameMatchmaker : MonoBehaviour {
     public const string DEFAULT_QUEUE = "default-queue";
+    private const string POOL_TOTAL_PLAYERS_ATTRIBUTE = "TotalPlayers";
 
     public static KitchenGameMatchmaker Instance { get; private set; }
 
@@ -119,7 +120,7 @@ public class KitchenGameMatchmaker : MonoBehaviour {
         }        
     }
 
-    public async Task FindMatch() {
+    public async Task FindMatch(int totalAllowedPlayers) {
         if (_createTicketResponse != null || _isFindingMatch) {
             return;
         }
@@ -133,7 +134,9 @@ public class KitchenGameMatchmaker : MonoBehaviour {
         try {
             _createTicketResponse = await MatchmakerService.Instance.CreateTicketAsync(
                 GetMatchmakingPlayers(),
-                new CreateTicketOptions { QueueName = DEFAULT_QUEUE }
+                new CreateTicketOptions(DEFAULT_QUEUE, new Dictionary<string, object> {
+                    {POOL_TOTAL_PLAYERS_ATTRIBUTE, totalAllowedPlayers}
+                })
             );
 
             // Wait a bit, don't poll right away

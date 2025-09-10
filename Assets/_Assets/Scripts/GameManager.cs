@@ -24,7 +24,7 @@ public class GameManager : NetworkBehaviour {
     public event EventHandler OnMultiplayerGameResumed;
     public event EventHandler OnLocalPlayerReadyChanged;
     
-    private enum State {
+    public enum State {
         WaitingToStart,
         CountdownToStart,
         GamePlaying,
@@ -45,6 +45,8 @@ public class GameManager : NetworkBehaviour {
     private Dictionary<int, bool> _playerPausedDictionary;
     private bool _autoTestGamePauseState;
     private int _nextSpawn;
+    private float _gameOverServerShutdownTimer = 30f;
+    private float _waitingToStartServerShutdownTimer = 60f;
 
     private void Awake() {
         Instance = this;
@@ -160,6 +162,11 @@ public class GameManager : NetworkBehaviour {
         
         switch (_state.Value) {
             case State.WaitingToStart:
+                _waitingToStartServerShutdownTimer -= Time.deltaTime;
+                if (_waitingToStartServerShutdownTimer <= 0f) {
+                    Debug.Log($"GAME_MANAGER Waiting to start timeout." );
+                    KitchenGameLobby.Instance.ShutdownServer();
+                }
                 break;
             case State.CountdownToStart:
                 _countdownToStartTimer.Value -= Time.deltaTime;
@@ -175,6 +182,11 @@ public class GameManager : NetworkBehaviour {
                 }
                 break;
             case State.GameOver:
+                _gameOverServerShutdownTimer -= Time.deltaTime;
+                if (_gameOverServerShutdownTimer <= 0f) {
+                    Debug.Log($"GAME_MANAGER Game over timeout." );
+                    KitchenGameLobby.Instance.ShutdownServer();
+                }
                 break;
         }
     }
@@ -275,5 +287,9 @@ public class GameManager : NetworkBehaviour {
     private void SetSpawnUsingPrefab(Transform prefab, out Vector3 pos, out Quaternion rot) {
         pos = prefab.position;
         rot = prefab.rotation;
+    }
+
+    public State GetState() {
+        return _state.Value;
     }
 }
