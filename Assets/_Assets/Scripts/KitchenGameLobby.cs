@@ -64,7 +64,7 @@ public class KitchenGameLobby : MonoBehaviour {
     private float _updatePlayersCooldownTimerMax = 1.1f;
     private bool _isUpdatingLobbyPlayerData;
     private bool _isUpdatingLobbyMatchmakingStatus;
-    private float _noConnectedClientsServerShutdownTimer = 15f;
+    private float _noConnectedClientsServerShutdownTimer = 30f;
 
     public static class LobbyDataKeys {
         public const string ColorId = "ColorId";
