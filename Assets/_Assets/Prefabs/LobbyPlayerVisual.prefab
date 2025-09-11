@@ -622,7 +622,7 @@ GameObject:
   - component: {fileID: 3006952601621200716}
   - component: {fileID: 1699238636983494279}
   m_Layer: 0
-  m_Name: CharacterSelectPlayer
+  m_Name: LobbyPlayerVisual
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -665,6 +665,11 @@ MonoBehaviour:
   makeHostButton: {fileID: 3333104921244522534}
   isHostImage: {fileID: 7295264003145915489}
   playerNameText: {fileID: 199882680383102186}
+  playerSpawnPoints:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
 --- !u!1 &7553939409227033909
 GameObject:
   m_ObjectHideFlags: 0

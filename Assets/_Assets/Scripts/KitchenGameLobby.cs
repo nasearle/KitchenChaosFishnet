@@ -31,9 +31,18 @@ public class KitchenGameLobby : MonoBehaviour {
     public event EventHandler OnLobbyLeaveSucceeded;
 
     // "Internal" events fired when data within the joined lobby changes
-    public event EventHandler OnJoinedLobbyAnyChange;
     public event EventHandler OnJoinedLobbyTopLevelDataChange;
-    public event EventHandler OnJoinedLobbyPlayerStatusChanged;
+    public event EventHandler OnJoinedLobbyPlayerDataChanged;
+    public event EventHandler<OnJoinedLobbyHostIdChangedEventArgs> OnJoinedLobbyHostIdChanged;
+    public class OnJoinedLobbyHostIdChangedEventArgs : EventArgs {
+        public string HostId;
+    }
+    public event EventHandler<OnJoinedLobbyPlayerJoinedEventArgs> OnJoinedLobbyPlayerJoined;
+    public class OnJoinedLobbyPlayerJoinedEventArgs : EventArgs {
+        public List<LobbyPlayerJoined> JoinedPlayers;
+    }
+
+    public event EventHandler OnJoinedLobbyPlayerLeft;
 
     // Event for local player data object that exists outside the lobby
     public event EventHandler OnPlayerDataChanged;
@@ -308,28 +317,6 @@ public class KitchenGameLobby : MonoBehaviour {
     }
 
     private void OnLobbyChanged(ILobbyChanges changes) {
-#if DEBUG_LOBBY_EVENTS
-        if (changes.HostId.Value != null) {
-            Debug.Log($"HostId changed: {changes.HostId.Value}");
-        }
-        
-        if (changes.PlayerJoined.Value != null) {
-            Debug.Log($"PlayerJoined: {changes.PlayerJoined.Value}");
-        }
-        
-        if (changes.PlayerLeft.Value != null) {
-            Debug.Log($"PlayerLeft: {changes.PlayerLeft.Value}");
-        }
-
-        if (changes.PlayerData.Value != null) {
-            Debug.Log($"PlayerData: {changes.PlayerData.Value}");
-        }
-        
-        if (changes.Data.Value != null) {
-            Debug.Log($"Lobby Data changed: {changes.Data.Value}");
-        }
-#endif
-
 #if UNITY_SERVER
         if (changes.PlayerLeft.Value != null) {
             Debug.Log("DEDICATED_SERVER Player left relay join code lobby");
@@ -347,30 +334,31 @@ public class KitchenGameLobby : MonoBehaviour {
             }
 
             changes.ApplyToLobby(_joinedLobby);
-
-            // Used to update player avatar visibility, name, and color in the
-            // lobby
-            OnJoinedLobbyAnyChange?.Invoke(this, EventArgs.Empty);
-
-            if (changes.HostId.Value != null ||
-                changes.PlayerJoined.Value != null ||
-                changes.PlayerLeft.Value != null) {
-
-                // Used to show or hide the buttons above the player avatars
-                // that control leaving the lobby, kicking other players, and
-                // making someone else the host.
-                OnJoinedLobbyPlayerStatusChanged?.Invoke(this, EventArgs.Empty);
+            
+            if (changes.PlayerData.Value != null) {
+                OnJoinedLobbyPlayerDataChanged?.Invoke(this, EventArgs.Empty);
             }
 
             if (changes.Data.Value != null) {
                 OnJoinedLobbyTopLevelDataChange?.Invoke(this, EventArgs.Empty);
             }
 
-            if (changes.PlayerLeft.Value != null) {
-                Debug.Log("OnLobbyChanged PLAYER LEFT");
-                if (GetLobby() == null || IsLocalPlayerLobbyHost()) {
-                    Debug.Log("OnLobbyChanged is party leader. Cancelling Matchmaking...");
+            if (changes.HostId.Value != null) {
+                OnJoinedLobbyHostIdChanged?.Invoke(this, new OnJoinedLobbyHostIdChangedEventArgs {
+                    HostId = changes.HostId.Value
+                });
+            }
 
+            if (changes.PlayerJoined.Value != null) {
+                OnJoinedLobbyPlayerJoined?.Invoke(this, new OnJoinedLobbyPlayerJoinedEventArgs {
+                    JoinedPlayers = changes.PlayerJoined.Value
+                });
+            }
+
+            if (changes.PlayerLeft.Value != null) {
+                OnJoinedLobbyPlayerLeft?.Invoke(this, EventArgs.Empty);
+
+                if (GetLobby() == null || IsLocalPlayerLobbyHost()) {
                     KitchenGameMatchmaker.Instance.CancelMatchmaking();
                 }
             }
@@ -599,6 +587,8 @@ public class KitchenGameLobby : MonoBehaviour {
         return _playerData.matchmakingStatus;
     }
 
+    // Setting the local player name eventually updates the lobby in the update
+    // method
     public void SetPlayerName(string playerName) {
         _playerData.playerName = playerName;
 
@@ -607,6 +597,8 @@ public class KitchenGameLobby : MonoBehaviour {
         OnPlayerDataChanged?.Invoke(this, EventArgs.Empty);
     }    
 
+    // Setting the local player color eventually updates the lobby in the update
+    // method
     public void SetPlayerColor(int colorId) {
         if (!IsColorAvailable(colorId)) {
             return;
@@ -697,25 +689,28 @@ public class KitchenGameLobby : MonoBehaviour {
         }
     }
 
-    public bool IsPlayerIndexConnected(int playerIndex) {
-        return _joinedLobby.Players.Count > playerIndex;
+    public bool IsPlayerIdInLobby(string playerId) {
+        foreach (var player in _joinedLobby.Players) {
+            if (player.Id == playerId) {
+                return true;
+            }
+        }
+        return false;
     }
 
-    public Unity.Services.Lobbies.Models.Player GetLobbyPlayerDataFromPlayerIndex(int playerIndex) {
-        // TODO: test that this stays in the same order. The lobby might not
-        // keep the same order when players join and leave.
-        return _joinedLobby.Players[playerIndex];
-    }
-
-    public Unity.Services.Lobbies.Models.Player GetLobbyPlayerDataForLocalPlayer() {
+    public Unity.Services.Lobbies.Models.Player GetLobbyPlayerDataFromPlayerId(string playerId) {
         if (_joinedLobby != null) {
             foreach (Unity.Services.Lobbies.Models.Player playerData in _joinedLobby.Players) {
-                if (playerData.Id == AuthenticationService.Instance.PlayerId) {
+                if (playerData.Id == playerId) {
                     return playerData;
                 }
             }
         }
         return default;
+    }
+
+    public Unity.Services.Lobbies.Models.Player GetLobbyPlayerDataForLocalPlayer() {
+        return GetLobbyPlayerDataFromPlayerId(AuthenticationService.Instance.PlayerId);
     }
 
     public Color GetPlayerColorByColorId(int colorId) {

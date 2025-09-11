@@ -55,7 +55,7 @@ public class LobbyUI : MonoBehaviour {
         KitchenGameLobby.Instance.OnLobbyJoinSucceeded += KitchenGameLobbyOnLobbyJoinSucceeded;
         KitchenGameLobby.Instance.OnLobbyLeaveSucceeded += KitchenGameLobbyOnLobbyLeaveSucceeded;
         KitchenGameLobby.Instance.OnJoinedLobbyTopLevelDataChange += KitchenGameLobbyOnJoinedLobbyTopLevelDataChange;
-        KitchenGameLobby.Instance.OnJoinedLobbyPlayerStatusChanged += KitchenGameLobbyOnJoinedLobbyPlayerStatusChanged;
+        KitchenGameLobby.Instance.OnJoinedLobbyHostIdChanged += KitchenGameLobbyOnJoinedLobbyHostIdChanged;
         KitchenGameLobby.Instance.OnPlayerMatchmakingStatusChanged += KitchenGameLobbyOnPlayerMatchmakingStatusChanged;
 
         mainMenuButton.onClick.AddListener(async () => {
@@ -161,7 +161,7 @@ public class LobbyUI : MonoBehaviour {
         copyLobbyCodeButton.gameObject.SetActive(true);
     }
 
-    private void KitchenGameLobbyOnJoinedLobbyPlayerStatusChanged(object sender, EventArgs e) {
+    private void KitchenGameLobbyOnJoinedLobbyHostIdChanged(object sender, EventArgs e) {
         if (!KitchenGameLobby.Instance.IsLocalPlayerLobbyHost()) {
             findMatchButton.interactable = false;
             isPrivateMatchToggle.interactable = false;
@@ -260,7 +260,7 @@ public class LobbyUI : MonoBehaviour {
         KitchenGameLobby.Instance.OnLobbyJoinSucceeded -= KitchenGameLobbyOnLobbyJoinSucceeded;
         KitchenGameLobby.Instance.OnLobbyLeaveSucceeded -= KitchenGameLobbyOnLobbyLeaveSucceeded;
         KitchenGameLobby.Instance.OnJoinedLobbyTopLevelDataChange -= KitchenGameLobbyOnJoinedLobbyTopLevelDataChange;
-        KitchenGameLobby.Instance.OnJoinedLobbyPlayerStatusChanged -= KitchenGameLobbyOnJoinedLobbyPlayerStatusChanged;
+        KitchenGameLobby.Instance.OnJoinedLobbyHostIdChanged -= KitchenGameLobbyOnJoinedLobbyHostIdChanged;
         KitchenGameLobby.Instance.OnPlayerMatchmakingStatusChanged -= KitchenGameLobbyOnPlayerMatchmakingStatusChanged;
 
         _playerInputActions.UI.Fullscreen.performed -= FullscreenOnPerformed;

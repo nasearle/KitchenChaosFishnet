@@ -43,7 +43,6 @@ public class KitchenGameMatchmaker : MonoBehaviour {
     }
 
     private async void KitchenGameLobbyOnLobbyLeaveSucceeded(object sender, EventArgs e) {
-        Debug.Log("Matchmaker KitchenGameLobbyOnLobbyLeaveSucceeded Cancelling Matchmaking...");
         await CancelMatchmaking();
     }
 
@@ -101,14 +100,11 @@ public class KitchenGameMatchmaker : MonoBehaviour {
 
         _isCancellingMatchmaking = true;
 
-        Debug.Log("CancelMatchmaking");
-
         OnCancelFindMatchStarted?.Invoke(this, EventArgs.Empty);
 
         try {
             await MatchmakerService.Instance.DeleteTicketAsync(_createTicketResponse.Id);
             _createTicketResponse = null;
-            Debug.Log("Matchmaking cancelled successfully.");
 
             OnCancelFindMatchSucceeded?.Invoke(this, EventArgs.Empty);
         } catch (MatchmakerServiceException e) {
@@ -126,8 +122,6 @@ public class KitchenGameMatchmaker : MonoBehaviour {
         }
 
         _isFindingMatch = true;
-
-        Debug.Log("FindMatch");
 
         OnFindMatchStarted?.Invoke(this, EventArgs.Empty);
 
