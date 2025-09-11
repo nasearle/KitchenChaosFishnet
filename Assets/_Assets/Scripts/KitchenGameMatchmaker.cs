@@ -40,6 +40,14 @@ public class KitchenGameMatchmaker : MonoBehaviour {
 
     private void Start() {
         KitchenGameLobby.Instance.OnLobbyLeaveSucceeded += KitchenGameLobbyOnLobbyLeaveSucceeded;
+        KitchenGameLobby.Instance.OnJoinedLobbyPlayerLeft += KitchenGameLobbyOnJoinedLobbyPlayerLeft;
+    }
+
+    private async void KitchenGameLobbyOnJoinedLobbyPlayerLeft(object sender, EventArgs e) {
+        if (KitchenGameLobby.Instance.GetLobby() == null ||
+            KitchenGameLobby.Instance.IsLocalPlayerLobbyHost()) {
+            await CancelMatchmaking();
+        }
     }
 
     private async void KitchenGameLobbyOnLobbyLeaveSucceeded(object sender, EventArgs e) {
@@ -224,5 +232,6 @@ public class KitchenGameMatchmaker : MonoBehaviour {
 
     private void OnDestroy() {
         KitchenGameLobby.Instance.OnLobbyLeaveSucceeded -= KitchenGameLobbyOnLobbyLeaveSucceeded;
+        KitchenGameLobby.Instance.OnJoinedLobbyPlayerLeft -= KitchenGameLobbyOnJoinedLobbyPlayerLeft;
     }
 }

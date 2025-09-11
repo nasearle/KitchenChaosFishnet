@@ -357,10 +357,6 @@ public class KitchenGameLobby : MonoBehaviour {
 
             if (changes.PlayerLeft.Value != null) {
                 OnJoinedLobbyPlayerLeft?.Invoke(this, EventArgs.Empty);
-
-                if (GetLobby() == null || IsLocalPlayerLobbyHost()) {
-                    KitchenGameMatchmaker.Instance.CancelMatchmaking();
-                }
             }
         }
 #endif
