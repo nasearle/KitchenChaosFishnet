@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<linker>
+  <assembly fullname="Assembly-CSharp">
+    <namespace fullname="FishNet" preserve="all"/>
+    <namespace fullname="FishNet.Object" preserve="all"/>
+    <namespace fullname="FishNet.Managing" preserve="all"/>
+    <namespace fullname="FishNet.Connection" preserve="all"/>
+    <namespace fullname="FishNet.Transporting" preserve="all"/>
+    <namespace fullname="FishNet.Object.Synchronizing" preserve="all"/>
+    <namespace fullname="FishNet.Object.Prediction" preserve="all"/>
+    <namespace fullname="FishNet.Broadcast" preserve="all"/>
+    <namespace fullname="FishNet.Managing.Client" preserve="all"/>
+    <namespace fullname="FishNet.Managing.Server" preserve="all"/>
+    <namespace fullname="FishNet.Managing.Scened" preserve="all"/>
+    <namespace fullname="FishNet.Managing.Timing" preserve="all"/>
+    <namespace fullname="FishNet.Managing.Transporting" preserve="all"/>
+    <namespace fullname="FishNet.Managing.Observing" preserve="all"/>
+    <namespace fullname="FishNet.Managing.Debugging" preserve="all"/>
+    <namespace fullname="FishNet.Managing.Object" preserve="all"/>
+    <namespace fullname="FishNet.Managing.Statistic" preserve="all"/>
+    <namespace fullname="FishNet.Utility.Performance" preserve="all"/>
+    <namespace fullname="FishNet.Component.ColliderRollback" preserve="all"/>
+    <namespace fullname="FishNet.Configuring" preserve="all"/>
+    <namespace fullname="FishNet.Configuring.EditorCloning" preserve="all"/>
+    <namespace fullname="FishNet.Managing.Predicting" preserve="all"/>
+    <namespace fullname="GameKit.Dependencies.Utilities" preserve="all"/>
+  </assembly>
+  
+  <!-- Disable Hot Reload for Android builds to prevent networking interference -->
+  <assembly fullname="SingularityGroup.HotReload.Runtime">
+    <namespace fullname="SingularityGroup.HotReload" preserve="nothing"/>
+  </assembly>
+</linker>

@@ -30,8 +30,12 @@ public class MainMenuUI : MonoBehaviour {
     }
 
     private void Start() {
+#if UNITY_WEBGL
         fullScreenButton.SetActive(Application.isMobilePlatform);
         SetFullScreenButtonSprite();
+#else
+        fullScreenButton.SetActive(false);
+#endif
     }
 
     private void SetFullScreenButtonSprite() {

@@ -43,8 +43,12 @@ public class LobbyUI : MonoBehaviour {
         findMatchButton.interactable = false;
         isPrivateMatchToggle.interactable = false;
 
+#if UNITY_WEBGL
         fullScreenButton.SetActive(Application.isMobilePlatform);
         SetFullScreenButtonSprite();
+#else
+        fullScreenButton.SetActive(false);
+#endif
 
         if (KitchenGameLobby.Instance.GetLobby() == null) {
             copyLobbyCodeButton.gameObject.SetActive(false);
