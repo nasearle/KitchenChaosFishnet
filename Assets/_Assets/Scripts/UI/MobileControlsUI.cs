@@ -16,11 +16,7 @@ public class MobileControlsUI : MonoBehaviour {
     }
 
     private void SetFullScreenButtonSprite() {
-        if (Screen.fullScreen) {
-            fullScreenButtonImage.sprite = magnifyMinusSprite;
-        } else {
-            fullScreenButtonImage.sprite = magnifyPlusSprite;
-        }
+        fullScreenButtonImage.sprite = Screen.fullScreen ? magnifyMinusSprite : magnifyPlusSprite;
     }
 
     private void GameInputOnFullScreen(object sender, EventArgs e) {

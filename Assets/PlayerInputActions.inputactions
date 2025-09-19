@@ -44,7 +44,7 @@
                 {
                     "name": "Fullscreen",
                     "type": "Button",
-                    "id": "4baab637-80f8-450c-8222-aa04cbb4bffa",
+                    "id": "27aecce1-28ba-4304-a4f7-da73fabf6c2d",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -241,18 +241,7 @@
                 },
                 {
                     "name": "",
-                    "id": "42995658-65ac-4f87-83d3-58cc222d4e71",
-                    "path": "<Keyboard>/t",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Fullscreen",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "030dc97c-3a7f-4f68-8609-e96d1e5c776a",
+                    "id": "234434d3-03b9-45f7-803c-25a9c27cb88f",
                     "path": "<Gamepad>/select",
                     "interactions": "",
                     "processors": "",
@@ -279,7 +268,7 @@
                 {
                     "name": "Fullscreen",
                     "type": "Button",
-                    "id": "4973a19f-8044-4a32-9c17-d4adbe6fa51a",
+                    "id": "0a59ead9-3678-4b46-8e41-1ee1a13272fb",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -311,18 +300,7 @@
                 },
                 {
                     "name": "",
-                    "id": "8fa3d990-0556-4e4a-a59b-260c7c572aed",
-                    "path": "<Keyboard>/t",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Fullscreen",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "39adbab6-66e7-4f37-a2da-7e8499e181ea",
+                    "id": "c56da5c8-4d6e-42c1-a85c-a9baa2d8e3a9",
                     "path": "<Gamepad>/select",
                     "interactions": "",
                     "processors": "",
